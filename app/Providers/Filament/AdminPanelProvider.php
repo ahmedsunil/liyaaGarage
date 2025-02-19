@@ -4,9 +4,12 @@ namespace App\Providers\Filament;
 
 use App\Settings\SiteSettings;
 use Filament\Support\Assets\Css;
+use Hasnayeen\Themes\ThemesPlugin;
+use App\Filament\Pages\Auth\Login;
 use Illuminate\Support\Facades\Vite;
 use Filament\Http\Middleware\Authenticate;
 use Filament\FontProviders\GoogleFontProvider;
+use Hasnayeen\Themes\Http\Middleware\SetTheme;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
@@ -28,6 +31,7 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
+            ->maxContentWidth('full')
             ->brandName(function () {
                 $settings = app(SiteSettings::class) ?? null;
                 if ($settings) {
@@ -37,7 +41,7 @@ class AdminPanelProvider extends PanelProvider
             })
             ->id('admin')
             ->path('admin')
-            ->login(\App\Filament\Pages\Auth\Login::class)
+            ->login(Login::class)
             ->colors([
                 'primary' => Color::Emerald,
             ])
@@ -55,9 +59,9 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])
+            ->breadcrumbs()
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
