@@ -16,7 +16,7 @@ class VehicleResource extends Resource
 {
     protected static ?string $model = Vehicle::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-truck';
 
     public static function form(Form $form): Form
     {
@@ -51,7 +51,7 @@ class VehicleResource extends Resource
                                            'like', "%{$search}%")->orWhere('phone', 'like',
                                            "%{$search}%")->limit(50)->pluck('name', 'id')->toArray())
                                        ->getOptionLabelUsing(fn($value): ?string => Customer::find($value)?->name),
-            ]);
+            ])->columns(1);
     }
 
     public static function table(Table $table): Table
