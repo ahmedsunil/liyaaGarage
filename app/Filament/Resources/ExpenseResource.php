@@ -64,51 +64,53 @@ class ExpenseResource extends Resource
                                             ->schema([
                             Forms\Components\TextInput::make('rate')
                                                       ->numeric()
-                                                      ->live()
+                                                      ->default(0)
+                                                      ->live(onBlur: true)
                                                       ->afterStateUpdated(function (Get $get, Set $set) {
-                                                          $qty = $get('qty');
-                                                          $rate = $get('rate');
-                                                          $gst = $get('gst');
+                                                          $qty = $get('qty') ?? 0;
+                                                          $rate = $get('rate') ?? 0;
+                                                          $gst = $get('gst') ?? 0;
 
                                                           // Calculate unit_price
-                                                          $unitPrice = $rate + $gst;
+                                                          $unitPrice = (float) $rate + (float) $gst;
                                                           $set('unit_price_with_gst', number_format($unitPrice, 2));
 
                                                           // Calculate total_expense
-                                                          $totalExpense = $qty * $unitPrice;
+                                                          $totalExpense = (float) $qty * (float) $unitPrice;
                                                           $set('total_expense', number_format($totalExpense, 2));
                                                       }),
                             Forms\Components\TextInput::make('qty')
                                                       ->numeric()
-                                                      ->live()
+                                                      ->default(0)
+                                                      ->live(onBlur: true)
                                                       ->afterStateUpdated(function (Get $get, Set $set) {
-                                                          $qty = $get('qty');
-                                                          $rate = $get('rate');
-                                                          $gst = $get('gst');
+                                                          $qty = $get('qty') ?? 0;
+                                                          $rate = $get('rate') ?? 0;
+                                                          $gst = $get('gst') ?? 0;
 
                                                           // Calculate unit_price
-                                                          $unitPrice = $rate + $gst;
+                                                          $unitPrice = (float) $rate + (float) $gst;
                                                           $set('unit_price_with_gst', number_format($unitPrice, 2));
 
                                                           // Calculate total_expense
-                                                          $totalExpense = $qty * $unitPrice;
+                                                          $totalExpense = (float) $qty * (float) $unitPrice;
                                                           $set('total_expense', number_format($totalExpense, 2));
                                                       }),
 
                             Forms\Components\TextInput::make('gst')->numeric()->label('GST')
-                                                      ->live()
-                                                      ->live()
+                                                      ->live(onBlur: true)
+                                                      ->default(0)
                                                       ->afterStateUpdated(function (Get $get, Set $set) {
-                                                          $qty = $get('qty');
-                                                          $rate = $get('rate');
-                                                          $gst = $get('gst');
+                                                          $qty = $get('qty') ?? 0;
+                                                          $rate = $get('rate') ?? 0;
+                                                          $gst = $get('gst') ?? 0;
 
                                                           // Calculate unit_price
-                                                          $unitPrice = $rate + $gst;
+                                                          $unitPrice = (float) $rate + (float) $gst;
                                                           $set('unit_price_with_gst', number_format($unitPrice, 2));
 
                                                           // Calculate total_expense
-                                                          $totalExpense = $qty * $unitPrice;
+                                                          $totalExpense = (float) $qty * (float) $unitPrice;
                                                           $set('total_expense', number_format($totalExpense, 2));
                                                       }),
                             Forms\Components\TextInput::make('unit_price_with_gst')->live()->label('Unit Price (including GST)'),
