@@ -2,28 +2,25 @@
 
 namespace App\Providers\Filament;
 
-use App\Settings\SiteSettings;
-use Filament\Support\Assets\Css;
-use Hasnayeen\Themes\ThemesPlugin;
-use App\Filament\Pages\Auth\Login;
-use Illuminate\Support\Facades\Vite;
-use Filament\Http\Middleware\Authenticate;
-use Filament\FontProviders\GoogleFontProvider;
-use Hasnayeen\Themes\Http\Middleware\SetTheme;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
+use App\Settings\SiteSettings;
+use Filament\Support\Assets\Css;
+use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Support\Facades\Vite;
+use Filament\Http\Middleware\Authenticate;
+use Filament\FontProviders\GoogleFontProvider;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
-use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -37,6 +34,7 @@ class AdminPanelProvider extends PanelProvider
                 if ($settings) {
                     return $settings->site_name;
                 }
+
                 return 'Filament';
             })
             ->id('admin')
