@@ -13,12 +13,14 @@ return new class extends Migration {
         Schema::create('stock_items', function (Blueprint $table) {
             $table->id();
             $table->string('item_code')->unique();
+            $table->foreignId('vendor_id')->default('0');
             $table->string('product_name');
             $table->decimal('sale_price', 10, 2);
-            $table->decimal('service_price', 10, 2)->default(0);
-            $table->decimal('total', 10, 2)->default(0);
+            $table->decimal('gst', 10, 2);
+            $table->decimal('total', 10, 2);
+            $table->decimal('inventory_value', 10, 2)->nullable();
             $table->integer('quantity')->default(0);
-            $table->integer('available_quantity')->default(0);
+            $table->integer('quantity_threshold')->default(0);
             $table->boolean('is_service')->default(false);
             $table->boolean('is_liquid')->default(false);
             $table->string('product_type')->nullable();

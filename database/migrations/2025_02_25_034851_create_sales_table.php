@@ -13,9 +13,11 @@ return new class extends Migration {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
             $table->date('date');
-            $table->string('vehicle_number');
+            $table->foreignId('vehicle_id')->constrained()->cascadeOnDelete();
             $table->string('transaction_type');
-            $table->decimal('subtotal_amount', 10, 2);
+            $table->string('payment_type');
+            $table->decimal('subtotal_amount', 10, 2)->default(0);
+            $table->boolean('is_service')->default(false);
             $table->decimal('discount_percentage', 5, 2)->default(0);
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->decimal('total_amount', 10, 2);

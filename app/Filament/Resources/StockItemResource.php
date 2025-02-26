@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
+use App\Models\Vendor;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Forms\Form;
@@ -74,8 +75,17 @@ class StockItemResource extends Resource
                                                                       ) => $get('is_service') ? 'Service Name' : 'Product Name')
                                                                       ->required()
                                                                       ->maxLength(255),
+                                            Forms\Components\Select::make('vendor_id')
+                                                                   ->relationship('vendor') // Relationship name
+                                                                   ->searchable() // Make the dropdown searchable
+                                                                   ->label('Vendor') // Label for the field
+                                                                   ->options(Vendor::get()->pluck('name',
+                                                    'id')) // Use get() to ensure a collection
+                                                                   ->visible(fn(Get $get) => ! $get('is_service')),
+                                            // Visible if 'is_service' is 0
+
                                         ])
-                                        ->columns(3),
+                                        ->columns(4),
 
                 Forms\Components\Section::make('Product Details')
                                         ->schema([
@@ -111,8 +121,6 @@ class StockItemResource extends Resource
                                                                                if ($get('product_type') === 'discrete') {
                                                                                    return [
                                                                                        'piece' => 'Piece',
-                                                                                       'pair'  => 'Pair',
-                                                                                       'set'   => 'Set',
                                                                                    ];
                                                                                } else {
                                                                                    return [
@@ -155,30 +163,44 @@ class StockItemResource extends Resource
                                                                                                ) => self::calculateTotal($get,
                                                                                                    $set)),
 
-                                                                     Forms\Components\TextInput::make('service_price')
-                                                                                               ->label('Service Charge')
+                                                                     Forms\Components\TextInput::make('gst')
+                                                                                               ->label('GST')
                                                                                                ->numeric()
                                                                                                ->prefix('MVR')
+                                                                                               ->required()
                                                                                                ->live(onBlur: true)
                                                                                                ->afterStateUpdated(fn(
                                                                                                    Get $get,
                                                                                                    Set $set
                                                                                                ) => self::calculateTotal($get,
-                                                                                                   $set))
-                                                                                               ->visible(fn(Get $get
-                                                                                               ) => ! $get('is_service')),
+                                                                                                   $set)),
 
-                                                                     Forms\Components\TextInput::make('total_price')
+                                                                     Forms\Components\TextInput::make('total')
                                                                                                ->label('Total Price')
                                                                                                ->numeric()
                                                                                                ->prefix('MVR')
                                                                                                ->disabled()
-                                                                                               ->dehydrated(false),
-                                                                 ])
-                                                                 ->columns(3),
+                                                                                               ->dehydrated()
+                                                                                               ->afterStateUpdated(fn(
+                                                                                                   Get $get,
+                                                                                                   Set $set
+                                                                                               ) => self::calculateTotal($get,
+                                                                                                   $set)),
 
-                                            Forms\Components\Grid::make()
-                                                                 ->schema([
+                                                                     Forms\Components\TextInput::make('inventory_value')
+                                                                                               ->label('Inventory Value')
+                                                                                               ->numeric()
+                                                                                               ->prefix('MVR')
+                                                                                               ->disabled()
+                                                                                               ->visible(fn(Get $get
+                                                                                               ) => ! $get('is_service'))
+                                                                                               ->dehydrated()
+                                                                                               ->afterStateUpdated(fn(
+                                                                                                   Get $get,
+                                                                                                   Set $set
+                                                                                               ) => self::calculateTotal($get,
+                                                                                                   $set)),
+
                                                                      Forms\Components\TextInput::make('quantity')
                                                                                                ->label('Stock Quantity')
                                                                                                ->helperText(fn(Get $get
@@ -186,6 +208,8 @@ class StockItemResource extends Resource
                                                                                                    ? 'Number of containers'
                                                                                                    : 'Number of '.($get('unit_type') ?? 'units'))
                                                                                                ->numeric()
+                                                                                               ->visible(fn(Get $get
+                                                                                               ) => ! $get('is_service'))
                                                                                                ->required()
                                                                                                ->live()
                                                                                                ->afterStateUpdated(function (
@@ -199,35 +223,36 @@ class StockItemResource extends Resource
                                                                                                    }
                                                                                                }),
 
-                                                                     Forms\Components\TextInput::make('available_quantity')
-                                                                                               ->label('Available Quantity')
-                                                                                               ->disabled()
-                                                                                               ->numeric(),
-
                                                                      Forms\Components\TextInput::make('remaining_volume')
                                                                                                ->label('Remaining Volume')
                                                                                                ->suffix(fn(Get $get
                                                                                                ) => strtoupper($get('unit_type') ?? ''))
                                                                                                ->disabled()
                                                                                                ->visible(fn(Get $get
-                                                                                               ) => $get('product_type') === 'liquid'),
-                                                                 ])
-                                                                 ->columns(3)
-                                                                 ->visible(fn(Get $get) => ! $get('is_service')),
+                                                                                               ) => $get('product_type') === 'liquid' && ! $get('is_service'))
+                                                                                               ->columns(2),
+                                                                 ]),
                                         ]),
             ]);
     }
 
     protected static function calculateTotal(Get $get, Set $set): void
     {
-        $salePrice = floatval($get('sale_price') ?? 0);
-        $servicePrice = floatval($get('service_price') ?? 0);
+        // Retrieve and sanitize input values
+        $salePrice = max(0, floatval($get('sale_price') ?? 0));
+        $gst = max(0, floatval($get('gst') ?? 0));
+        $qty = max(1, floatval($get('quantity') ?? 1));
+        $isService = boolval($get('is_service'));
 
-        // If it's a service, the total is just the sale price (service price)
-        // Otherwise, it's the sum of sale price and service charge
-        $total = $get('is_service') ? $salePrice : $salePrice + $servicePrice;
+        // Calculate total
+        $total = $salePrice + $gst;
 
-        $set('total_price', $total);
+        // Calculate inventory value
+        $inventoryValue = $isService ? $salePrice : $total * $qty;
+
+        // Set calculated values
+        $set('total', $total);
+        $set('inventory_value', $inventoryValue);
     }
 
     public static function table(Table $table): Table
@@ -243,6 +268,7 @@ class StockItemResource extends Resource
                                          ->searchable(),
 
                 Tables\Columns\IconColumn::make('is_service')
+                                         ->label('Service / Product')
                                          ->boolean()
                                          ->icons([
                                              'heroicon-o-shopping-bag'       => false,
@@ -259,12 +285,10 @@ class StockItemResource extends Resource
                                          ->money('MVR')
                                          ->sortable(),
 
-                Tables\Columns\TextColumn::make('service_price')
-                                         ->label('Service Charge')
+                Tables\Columns\TextColumn::make('total')
+                                         ->label('Total Inc. GST')
                                          ->money('MVR')
-                                         ->sortable()
-                                         ->hidden(fn(Builder $query): bool => $query->where('is_service',
-                                             true)->exists()),
+                                         ->sortable(),
 
 
                 Tables\Columns\TextColumn::make('quantity')
@@ -272,6 +296,7 @@ class StockItemResource extends Resource
                                          ->sortable()
                                          ->hidden(fn(Builder $query): bool => $query->where('is_service',
                                              true)->exists()),
+
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
