@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->date('date');
             $table->foreignId('vehicle_id')->constrained()->cascadeOnDelete();
             $table->string('transaction_type');
-            $table->string('payment_type');
+            $table->string('payment_status');
             $table->decimal('subtotal_amount', 10, 2)->default(0);
             $table->boolean('is_service')->default(false);
             $table->decimal('discount_percentage', 5, 2)->default(0);
