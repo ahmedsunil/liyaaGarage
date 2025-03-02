@@ -205,6 +205,17 @@ class StockItemResource extends Resource
                                                 }
                                             }),
 
+                                        Forms\Components\TextInput::make('quantity_threshold')
+                                            ->label('Quantity Threshold')
+                                            ->numeric()
+                                            ->step(0.01)
+                                            ->visible(fn (
+                                                Get $get
+                                            ) => ! $get('is_service'))
+                                            ->required()
+                                            ->live(onBlur: true),
+
+
                                         Forms\Components\TextInput::make('volume_per_unit')
                                             ->label('Volume per Unit')
                                             ->numeric()

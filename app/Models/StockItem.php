@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Enums\StockStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -19,6 +20,10 @@ class StockItem extends Model
 //        'volume_per_unit'  => 'decimal:2',
 //        'remaining_volume' => 'decimal:2',
 //    ];
+
+    protected $casts = [
+        'stock_status' => StockStatus::class,
+    ];
 
     public function saleItems(): HasMany
     {

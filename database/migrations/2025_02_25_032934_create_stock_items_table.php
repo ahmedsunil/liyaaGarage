@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('item_code')->unique();
             $table->foreignId('vendor_id')->default('0');
             $table->string('product_name');
+            $table->string('stock_status');
             $table->decimal('sale_price', 10, 2);
             $table->decimal('gst', 10, 2);
             $table->decimal('total', 10, 2);
