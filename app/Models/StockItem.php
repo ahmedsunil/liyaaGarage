@@ -10,16 +10,6 @@ class StockItem extends Model
 {
     protected $guarded = [];
 
-//    protected $casts = [
-//        'is_service'       => 'boolean',
-//        'is_liquid'        => 'boolean',
-//        'sale_price'       => 'decimal:2',
-//        'gst'              => 'decimal:2',
-//        'total'            => 'decimal:2',
-//        'inventory_value'  => 'decimal:2',
-//        'volume_per_unit'  => 'decimal:2',
-//        'remaining_volume' => 'decimal:2',
-//    ];
 
     protected $casts = [
         'stock_status' => StockStatus::class,
@@ -41,7 +31,7 @@ class StockItem extends Model
             return $this->remaining_volume;
         }
 
-        return $this->stock_quantity;
+        return $this->quantity;
     }
 
     public function reduceStock($volume)
@@ -55,7 +45,7 @@ class StockItem extends Model
                 $this->remaining_volume -= $volume;
                 if ($this->remaining_volume < 0.01) { // To handle floating point precision issues
                     $this->remaining_volume = 0;
-                    $this->stock_quantity = max(0, $this->stock_quantity - 1);
+                    $this->quantity = max(0, $this->quantity - 1);
                 }
                 $this->save();
 
@@ -63,8 +53,8 @@ class StockItem extends Model
             }
         } else {
             $quantity = ceil($volume); // For discrete items, round up to nearest whole number
-            if ($this->stock_quantity >= $quantity) {
-                $this->stock_quantity -= $quantity;
+            if ($this->quantity >= $quantity) {
+                $this->quantity -= $quantity;
                 $this->save();
 
                 return true;

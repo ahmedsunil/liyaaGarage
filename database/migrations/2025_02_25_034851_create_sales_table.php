@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\Enums\TransactionType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,8 +15,7 @@ return new class extends Migration {
             $table->id();
             $table->date('date');
             $table->foreignId('vehicle_id')->constrained()->cascadeOnDelete();
-            $table->string('transaction_type');
-            $table->string('payment_status');
+            $table->string('transaction_type')->default(TransactionType::PENDING);
             $table->decimal('subtotal_amount', 10, 2)->default(0);
             $table->boolean('is_service')->default(false);
             $table->decimal('discount_percentage', 5, 2)->default(0);
