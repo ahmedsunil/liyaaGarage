@@ -138,13 +138,27 @@ class StockItemResource extends Resource
                                                                         Forms\Components\Grid::make()
                                                                                              ->schema([
                                                                                                  Forms\Components\TextInput::make('sale_price')
-                                                                                                                           ->label(fn(
+                                                                                                                           ->label(function (
                                                                                                                                Get $get
-                                                                                                                           ) => $get('is_service') ? 'Service Price' : 'Sale Price')
+                                                                                                                           ) {
+                                                                                                                               if ($get('is_service')) {
+                                                                                                                                   return 'Service Price';
+                                                                                                                               }
+
+                                                                                                                               if ($get('product_type') === 'liquid') {
+                                                                                                                                   return 'Price per '.($get('unit_type') ?? 'ML');
+                                                                                                                               }
+
+                                                                                                                               return 'Sale Price';
+                                                                                                                           })
                                                                                                                            ->numeric()
                                                                                                                            ->step(0.01)
                                                                                                                            ->prefix('MVR')
                                                                                                                            ->required()
+                                                                                                                           ->rules([
+                                                                                                                               'numeric',
+                                                                                                                               'min:0',
+                                                                                                                           ])
                                                                                                                            ->live(onBlur: true)
                                                                                                                            ->afterStateUpdated(fn(
                                                                                                                                Get $get,
@@ -155,6 +169,10 @@ class StockItemResource extends Resource
                                                                                                  Forms\Components\TextInput::make('gst')
                                                                                                                            ->label('GST')
                                                                                                                            ->numeric()
+                                                                                                                           ->rules([
+                                                                                                                               'numeric',
+                                                                                                                               'min:0',
+                                                                                                                           ])
                                                                                                                            ->step(0.01)
                                                                                                                            ->prefix('MVR')
                                                                                                                            ->required()
@@ -169,14 +187,15 @@ class StockItemResource extends Resource
                                                                                                                            ->label('Total Price')
                                                                                                                            ->numeric()
                                                                                                                            ->prefix('MVR')
-                                                                                                                           ->disabled()
+                                                                                                                           ->readOnly()
                                                                                                                            ->dehydrated(),
 
                                                                                                  Forms\Components\TextInput::make('inventory_value')
                                                                                                                            ->label('Inventory Value')
                                                                                                                            ->numeric()
                                                                                                                            ->prefix('MVR')
-                                                                                                                           ->disabled()
+                                                                                                                           ->readOnly()
+                                                                                                                           ->step(0.01)
                                                                                                                            ->visible(fn(
                                                                                                                                Get $get
                                                                                                                            ) => ! $get('is_service'))
@@ -194,6 +213,10 @@ class StockItemResource extends Resource
                                                                                                      ) => ! $get('is_service'))
                                                                                                                            ->required()
                                                                                                                            ->live(onBlur: true)
+                                                                                                                           ->rules([
+                                                                                                                               'numeric',
+                                                                                                                               'min:0',
+                                                                                                                           ])
                                                                                                                            ->afterStateUpdated(function (
                                                                                                                                Get $get,
                                                                                                                                Set $set
@@ -208,10 +231,9 @@ class StockItemResource extends Resource
                                                                                                  Forms\Components\TextInput::make('quantity_threshold')
                                                                                                                            ->label('Quantity Threshold')
                                                                                                                            ->numeric()
-//                                                                                                                           ->step(0.01)
                                                                                                                            ->visible(fn(
-                                                                                                         Get $get
-                                                                                                     ) => ! $get('is_service'))
+                                                                                                                               Get $get
+                                                                                                                           ) => ! $get('is_service'))
                                                                                                                            ->required()
                                                                                                                            ->live(onBlur: true),
 
@@ -222,6 +244,10 @@ class StockItemResource extends Resource
                                                                                                                            ->step(0.01)
                                                                                                                            ->suffix('ML')
                                                                                                                            ->required()
+                                                                                                                           ->rules([
+                                                                                                                               'numeric',
+                                                                                                                               'min:0',
+                                                                                                                           ])
                                                                                                                            ->visible(fn(
                                                                                                                                Get $get
                                                                                                                            ) => $get('product_type') === 'liquid')
@@ -239,11 +265,11 @@ class StockItemResource extends Resource
                                                                                                                            ->numeric()
                                                                                                                            ->step(0.01)
                                                                                                                            ->suffix('ML')
-                                                                                                                           ->dehydrated()
-                                                                                                                           ->disabled()
+                                                                                                                           ->dehydrated(true) // Explicitly set to true
+                                                                                                                           ->readOnly() // Read-only instead
                                                                                                                            ->visible(fn(
-                                                                                                                               Get $get
-                                                                                                                           ) => $get('product_type') === 'liquid')
+                                                                                                         Get $get
+                                                                                                     ) => $get('product_type') === 'liquid')
                                                                                                                            ->reactive()
                                                                                                                            ->afterStateUpdated(function (
                                                                                                                                Get $get,
@@ -253,10 +279,7 @@ class StockItemResource extends Resource
                                                                                                                                $remainingVolume = floatval($get('remaining_volume') ?? 0);
 
                                                                                                                                if ($volumePerUnit > 0) {
-                                                                                                                                   // Calculate how many whole units can be made from the remaining volume
                                                                                                                                    $wholeUnits = floor($remainingVolume / $volumePerUnit);
-
-                                                                                                                                   // Update the quantity based on whole units
                                                                                                                                    $set('quantity',
                                                                                                                                        $wholeUnits);
                                                                                                                                }

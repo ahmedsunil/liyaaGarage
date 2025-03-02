@@ -23,7 +23,7 @@ return new class extends Migration {
             $table->integer('quantity')->default(0);
             $table->integer('quantity_threshold')->default(0);
             $table->boolean('is_service')->default(false);
-            $table->boolean('is_liquid')->default(false);
+//            $table->boolean('is_liquid')->default(false);
             $table->string('product_type')->nullable();
             $table->string('unit_type')->nullable();
             $table->decimal('volume_per_unit', 10, 2)->nullable();
