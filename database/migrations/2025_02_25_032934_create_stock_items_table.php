@@ -27,6 +27,7 @@ return new class extends Migration {
             $table->string('unit_type')->nullable();
             $table->decimal('volume_per_unit', 10, 2)->nullable();
             $table->decimal('remaining_volume', 10, 2)->nullable();
+            $table->integer('remaining_quantity', 10, 2)->nullable();
             $table->timestamps();
         });
     }

@@ -43,21 +43,21 @@ class SaleResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                                         ->sortable(),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('vehicle.customer.name')
-                                         ->searchable()
-                                         ->sortable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('vehicle.vehicle_number')
-                                         ->searchable()
-                                         ->sortable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('payment_status')->label('Payment Status')->badge(),
 
                 Tables\Columns\TextColumn::make('total_amount')
-                                         ->money('mvr')
-                                         ->sortable(),
+                    ->money('mvr')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('transaction_type')
-                                         ->sortable(),
+                    ->sortable(),
             ])
             ->filters([
                 //                Tables\Filters\SelectFilter::make('payment_type')
@@ -81,187 +81,187 @@ class SaleResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Grid::make(12)
-                                     ->schema([
-                                         Forms\Components\Section::make('Sale Items')
-                                                                 ->schema([
-                                                                     Forms\Components\Repeater::make('items')
-                                                                                              ->relationship()
-                                                                                              ->schema([
-                                                                                                  Forms\Components\Select::make('stock_item_id')
-                                                                                                                         ->label('Product')
-                                                                                                                         ->options(StockItem::query()->pluck('product_name',
-                                                                                                                             'id'))
-                                                                                                                         ->searchable()
-                                                                                                                         ->required()
-                                                                                                                         ->reactive()
-                                                                                                                         ->afterStateUpdated(function (
-                                                                                                                             Forms\Get $get,
-                                                                                                                             Forms\Set $set,
-                                                                                                                             $state
-                                                                                                                         ) {
-                                                                                                                             if ($state) {
-                                                                                                                                 $stockItem = StockItem::find($state);
-                                                                                                                                 if ($stockItem) {
-                                                                                                                                     $set('unit_price',
-                                                                                                                                         $stockItem->total);
+                    ->schema([
+                        Forms\Components\Section::make('Sale Items')
+                            ->schema([
+                                Forms\Components\Repeater::make('items')
+                                    ->relationship()
+                                    ->schema([
+                                        Forms\Components\Select::make('stock_item_id')
+                                            ->label('Product')
+                                            ->options(StockItem::query()->pluck('product_name',
+                                                'id'))
+                                            ->searchable()
+                                            ->required()
+                                            ->reactive()
+                                            ->afterStateUpdated(function (
+                                                Forms\Get $get,
+                                                Forms\Set $set,
+                                                $state
+                                            ) {
+                                                if ($state) {
+                                                    $stockItem = StockItem::find($state);
+                                                    if ($stockItem) {
+                                                        $set('unit_price',
+                                                            $stockItem->total);
 
-                                                                                                                                     // Check if it's a service item and set quantity to 1
-                                                                                                                                     if ($stockItem->is_service) {
-                                                                                                                                         $set('quantity',
-                                                                                                                                             1);
-                                                                                                                                     } else {
-                                                                                                                                         $set('quantity',
-                                                                                                                                             1);
-                                                                                                                                     }
+                                                        // Check if it's a service item and set quantity to 1
+                                                        if ($stockItem->is_service) {
+                                                            $set('quantity',
+                                                                1);
+                                                        } else {
+                                                            $set('quantity',
+                                                                1);
+                                                        }
 
-                                                                                                                                     static::updateItemTotal($get,
-                                                                                                                                         $set);
-                                                                                                                                 }
-                                                                                                                             }
-                                                                                                                             static::updateFormTotals($get,
-                                                                                                                                 $set);
-                                                                                                                         }),
+                                                        static::updateItemTotal($get,
+                                                            $set);
+                                                    }
+                                                }
+                                                static::updateFormTotals($get,
+                                                    $set);
+                                            }),
 
-                                                                                                  // 2. Modify the quantity field to be conditionally disabled
-                                                                                                  Forms\Components\TextInput::make('quantity')
-                                                                                                                            ->numeric()
-                                                                                                                            ->default(1)
-                                                                                                                            ->required()
-                                                                                                                            ->reactive()
-                                                                                                                            ->disabled(fn(
-                                                                                                                                Forms\Get $get
-                                                                                                                            ): bool => $get('is_service') === true)
-                                                                                                                            ->afterStateUpdated(function (
-                                                                                                                                Forms\Get $get,
-                                                                                                                                Forms\Set $set
-                                                                                                                            ) {
-                                                                                                                                static::updateItemTotal($get,
-                                                                                                                                    $set);
-                                                                                                                                static::updateFormTotals($get,
-                                                                                                                                    $set);
-                                                                                                                            }),
+                                        // 2. Modify the quantity field to be conditionally disabled
+                                        Forms\Components\TextInput::make('quantity')
+                                            ->numeric()
+                                            ->default(1)
+                                            ->required()
+                                            ->reactive()
+                                            ->disabled(fn (
+                                                Forms\Get $get
+                                            ): bool => $get('is_service') === true)
+                                            ->afterStateUpdated(function (
+                                                Forms\Get $get,
+                                                Forms\Set $set
+                                            ) {
+                                                static::updateItemTotal($get,
+                                                    $set);
+                                                static::updateFormTotals($get,
+                                                    $set);
+                                            }),
 
-                                                                                                  // Rest of your fields remain the same
-                                                                                                  Forms\Components\TextInput::make('unit_price')
-                                                                                                                            ->label('Unit Price')
-                                                                                                                            ->numeric()
-                                                                                                                            ->prefix('MVR')
-                                                                                                                            ->disabled()
-                                                                                                                            ->dehydrated(true),
-                                                                                                  Forms\Components\TextInput::make('total_price')
-                                                                                                                            ->label('Total Price')
-                                                                                                                            ->numeric()
-                                                                                                                            ->prefix('MVR')
-                                                                                                                            ->disabled()
-                                                                                                                            ->dehydrated(true),
-                                                                                              ])
-                                                                         // 3. To ensure calculations are triggered when form loads, add this
-                                                                                              ->afterStateHydrated(function (
-                                                                             Forms\Get $get,
-                                                                             Forms\Set $set
-                                                                         ) {
-                                                                             $items = $get('items') ?? [];
+                                        // Rest of your fields remain the same
+                                        Forms\Components\TextInput::make('unit_price')
+                                            ->label('Unit Price')
+                                            ->numeric()
+                                            ->prefix('MVR')
+                                            ->disabled()
+                                            ->dehydrated(true),
+                                        Forms\Components\TextInput::make('total_price')
+                                            ->label('Total Price')
+                                            ->numeric()
+                                            ->prefix('MVR')
+                                            ->disabled()
+                                            ->dehydrated(true),
+                                    ])
+                                    // 3. To ensure calculations are triggered when form loads, add this
+                                    ->afterStateHydrated(function (
+                                        Forms\Get $get,
+                                        Forms\Set $set
+                                    ) {
+                                        $items = $get('items') ?? [];
 
-                                                                             if (count($items) > 0) {
-                                                                                 // Instead of trying to pass closures to updateItemTotal,
-                                                                                 // directly calculate and set the values for each item
-                                                                                 foreach ($items as $itemKey => $item) {
-                                                                                     $quantity = floatval($get("items.{$itemKey}.quantity") ?? 1);
-                                                                                     $unitPrice = floatval($get("items.{$itemKey}.unit_price") ?? 0);
-                                                                                     $totalPrice = round($quantity * $unitPrice,
-                                                                                         2);
-                                                                                     $set("items.{$itemKey}.total_price",
-                                                                                         $totalPrice);
-                                                                                 }
+                                        if (count($items) > 0) {
+                                            // Instead of trying to pass closures to updateItemTotal,
+                                            // directly calculate and set the values for each item
+                                            foreach ($items as $itemKey => $item) {
+                                                $quantity = floatval($get("items.{$itemKey}.quantity") ?? 1);
+                                                $unitPrice = floatval($get("items.{$itemKey}.unit_price") ?? 0);
+                                                $totalPrice = round($quantity * $unitPrice,
+                                                    2);
+                                                $set("items.{$itemKey}.total_price",
+                                                    $totalPrice);
+                                            }
 
-                                                                                 // Then update the form totals
-                                                                                 static::updateFormTotals($get, $set);
-                                                                             }
-                                                                         })
-                                                                                              ->columns(4)
-                                                                                              ->defaultItems(0)
-                                                                                              ->addActionLabel('Add Item')
-                                                                                              ->reorderable(false)
-                                                                                              ->cloneable(false)
-                                                                                              ->deletable(true)
-                                                                                              ->reactive()
-                                                                                              ->afterStateUpdated(function (
-                                                                                                  Forms\Get $get,
-                                                                                                  Forms\Set $set
-                                                                                              ) {
-                                                                                                  static::updateFormTotals($get,
-                                                                                                      $set);
-                                                                                              }),
-                                                                 ])
-                                                                 ->columnSpan(9),
+                                            // Then update the form totals
+                                            static::updateFormTotals($get, $set);
+                                        }
+                                    })
+                                    ->columns(4)
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Item')
+                                    ->reorderable(false)
+                                    ->cloneable(false)
+                                    ->deletable(true)
+                                    ->reactive()
+                                    ->afterStateUpdated(function (
+                                        Forms\Get $get,
+                                        Forms\Set $set
+                                    ) {
+                                        static::updateFormTotals($get,
+                                            $set);
+                                    }),
+                            ])
+                            ->columnSpan(9),
 
-                                         Forms\Components\Section::make('Sale Details')
-                                                                 ->schema([
-                                                                     Forms\Components\DatePicker::make('date')
-                                                                                                ->required()
-                                                                                                ->default(now()),
-                                                                     Forms\Components\Select::make('vehicle_id')
-                                                                                            ->label('Vehicle')
-                                                                                            ->relationship('vehicle',
-                                                                                                'vehicle_number')
-                                                                                            ->searchable()
-                                                                                            ->required(),
-                                                                     Forms\Components\Select::make('payment_status')->label('Payment Status')
-                                                                                            ->options([
-                                                                                                'pending' => 'Pending',
-                                                                                                'paid'    => 'Paid',
-                                                                                            ])
-                                                                                            ->default('pending')
-                                                                                            ->required()
-                                                                                            ->reactive()
-                                                                                            ->afterStateUpdated(function (
-                                                                                                Forms\Get $get,
-                                                                                                Forms\Set $set
-                                                                                            ) {
-                                                                                                static::updateFormTotals($get,
-                                                                                                    $set);
-                                                                                            }),
-                                                                     Forms\Components\Select::make('transaction_type')
-                                                                                            ->options([
-                                                                                                'cash'          => 'Cash',
-                                                                                                'bank_transfer' => 'Bank Transfer',
-                                                                                                'card'          => 'Card',
-                                                                                            ])
-                                                                                            ->visible(fn(Forms\Get $get
-                                                                                            ) => $get('payment_status') === 'paid'),
-                                                                     Forms\Components\TextInput::make('subtotal_amount')
-                                                                                               ->label('Subtotal')
-                                                                                               ->numeric()
-                                                                                               ->prefix('MVR')
-                                                                                               ->disabled(),
-                                                                     Forms\Components\TextInput::make('discount_percentage')
-                                                                                               ->label('Discount %')
-                                                                                               ->numeric()
-                                                                                               ->default(0)
-                                                                                               ->suffix('%')
-                                                                                               ->reactive()
-                                                                                               ->afterStateUpdated(function (
-                                                                                                   Forms\Get $get,
-                                                                                                   Forms\Set $set
-                                                                                               ) {
-                                                                                                   static::updateFormTotals($get,
-                                                                                                       $set);
-                                                                                               }),
-                                                                     Forms\Components\TextInput::make('discount_amount')
-                                                                                               ->label('Discount Amount')
-                                                                                               ->numeric()
-                                                                                               ->prefix('MVR')
-                                                                                               ->readOnly(),
-                                                                     Forms\Components\TextInput::make('total_amount')
-                                                                                               ->label('Total Amount')
-                                                                                               ->numeric()
-                                                                                               ->prefix('MVR')
-                                                                                               ->readOnly(),
-                                                                     Forms\Components\Textarea::make('remarks')
-                                                                                              ->rows(3),
-                                                                 ])
-                                                                 ->columnSpan(3),
-                                     ]),
+                        Forms\Components\Section::make('Sale Details')
+                            ->schema([
+                                Forms\Components\DatePicker::make('date')
+                                    ->required()
+                                    ->default(now()),
+                                Forms\Components\Select::make('vehicle_id')
+                                    ->label('Vehicle')
+                                    ->relationship('vehicle',
+                                        'vehicle_number')
+                                    ->searchable()
+                                    ->required(),
+                                Forms\Components\Select::make('payment_status')->label('Payment Status')
+                                    ->options([
+                                        'pending' => 'Pending',
+                                        'paid' => 'Paid',
+                                    ])
+                                    ->default('pending')
+                                    ->required()
+                                    ->reactive()
+                                    ->afterStateUpdated(function (
+                                        Forms\Get $get,
+                                        Forms\Set $set
+                                    ) {
+                                        static::updateFormTotals($get,
+                                            $set);
+                                    }),
+                                Forms\Components\Select::make('transaction_type')
+                                    ->options([
+                                        'cash' => 'Cash',
+                                        'bank_transfer' => 'Bank Transfer',
+                                        'card' => 'Card',
+                                    ])
+                                    ->visible(fn (Forms\Get $get
+                                    ) => $get('payment_status') === 'paid'),
+                                Forms\Components\TextInput::make('subtotal_amount')
+                                    ->label('Subtotal')
+                                    ->numeric()
+                                    ->prefix('MVR')
+                                    ->disabled(),
+                                Forms\Components\TextInput::make('discount_percentage')
+                                    ->label('Discount %')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->suffix('%')
+                                    ->reactive()
+                                    ->afterStateUpdated(function (
+                                        Forms\Get $get,
+                                        Forms\Set $set
+                                    ) {
+                                        static::updateFormTotals($get,
+                                            $set);
+                                    }),
+                                Forms\Components\TextInput::make('discount_amount')
+                                    ->label('Discount Amount')
+                                    ->numeric()
+                                    ->prefix('MVR')
+                                    ->readOnly(),
+                                Forms\Components\TextInput::make('total_amount')
+                                    ->label('Total Amount')
+                                    ->numeric()
+                                    ->prefix('MVR')
+                                    ->readOnly(),
+                                Forms\Components\Textarea::make('remarks')
+                                    ->rows(3),
+                            ])
+                            ->columnSpan(3),
+                    ]),
             ]);
     }
 
@@ -301,9 +301,9 @@ class SaleResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListSales::route('/'),
+            'index' => Pages\ListSales::route('/'),
             'create' => Pages\CreateSale::route('/create'),
-            'edit'   => Pages\EditSale::route('/{record}/edit'),
+            'edit' => Pages\EditSale::route('/{record}/edit'),
         ];
     }
 
