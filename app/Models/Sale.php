@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Exception;
-use App\Support\Enums\PaymentStatus;
+use Log;
+use Illuminate\Support\Facades\DB;
 use App\Support\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,115 +11,97 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Sale extends Model
 {
+    public $_tempItems;
+
     protected $guarded = [];
 
     protected $casts = [
-        'date'                => 'date',
-        'subtotal_amount'     => 'decimal:2',
-        'discount_amount'     => 'decimal:2',
-        'total_amount'        => 'decimal:2',
-        'payment_status'      => PaymentStatus::class,
-        'discount_percentage' => 'decimal:2',
-        'transaction_type'    => TransactionType::class,
+        'transaction_type' => TransactionType::class,
     ];
 
     protected static function booted(): void
     {
-        static::created(function ($sale) {
-            $sale->updateInventory();
+        parent::booted();
+
+        static::updating(function (Sale $sale) {
+            $sale->_tempItems = $sale->items()->with('stockItem')->get();
         });
 
-        static::updated(function ($sale) {
-            $sale->updateInventoryOnUpdate();
+        static::updated(function (Sale $sale) {
+            if (! isset($sale->_tempItems)) {
+                return;
+            }
+
+            DB::transaction(function () use ($sale) {
+                $sale->load('items.stockItem');
+
+                // Handle removed items
+                foreach ($sale->_tempItems as $originalItem) {
+                    if (! $sale->items->contains('id', $originalItem->id)) {
+                        $stockItem = StockItem::lockForUpdate()->find($originalItem->stock_item_id);
+                        if ($stockItem && ! $stockItem->is_service) {
+                            if ($stockItem->is_liquid) {
+                                $stockItem->remaining_volume += $originalItem->quantity;
+                                $stockItem->quantity = ceil($stockItem->remaining_volume / $stockItem->volume_per_unit);
+                            } else {
+                                $stockItem->quantity += $originalItem->quantity;
+                            }
+                            $stockItem->save();
+
+                            Log::info('Restored stock for removed item', [
+                                'stock_item_id' => $stockItem->id,
+                                'quantity' => $originalItem->quantity,
+                                'new_quantity' => $stockItem->quantity,
+                            ]);
+                        }
+                    }
+                }
+            });
+
+            unset($sale->_tempItems);
         });
 
-        static::deleted(function ($sale) {
-            $sale->restoreInventory();
+
+        static::deleting(function (Sale $sale) {
+            $sale->load('items.stockItem');
+            foreach ($sale->items as $item) {
+                $stockItem = StockItem::lockForUpdate()->find($item->stock_item_id);
+                if ($stockItem && ! $stockItem->is_service) {
+                    if ($stockItem->is_liquid) {
+                        $stockItem->remaining_volume += $item->quantity;
+                        $stockItem->quantity = ceil($stockItem->remaining_volume / $stockItem->volume_per_unit);
+                    } else {
+                        $stockItem->quantity += $item->quantity;
+                    }
+                    $stockItem->save();
+                }
+            }
         });
-    }
 
-    public function updateInventory(): void
-    {
-        foreach ($this->items as $item) {
-            $this->updateStockItem($item);
-        }
-    }
 
-    private function updateStockItem($item)
-    {
-        $stockItem = StockItem::find($item->stock_item_id);
-        if (! $stockItem || $stockItem->is_service) {
-            return;
-        }
+        // restore deleted stock
+        static::deleting(function (Sale $sale) {
+            $sale->load('items.stockItem');  // Eager load relationships
 
-        try {
-            if ($stockItem->is_liquid) {
-                $stockItem->remaining_volume = max(0, $stockItem->remaining_volume - $item->quantity);
-                $stockItem->quantity = ceil($stockItem->remaining_volume / $stockItem->volume_per_unit);
-            } else {
-                $stockItem->quantity = max(0, $stockItem->quantity - $item->quantity);
-            }
+            DB::transaction(function () use ($sale) {
+                foreach ($sale->items as $item) {
+                    $stockItem = StockItem::lockForUpdate()->find($item->stock_item_id);
+                    if (! $stockItem || $stockItem->is_service) {
+                        continue;
+                    }
 
-            $stockItem->inventory_value = $stockItem->quantity * $stockItem->total;
-            $stockItem->save();
+                    if ($stockItem->is_liquid) {
+                        $stockItem->remaining_volume += $item->quantity;
+                        $stockItem->quantity = ceil($stockItem->remaining_volume / $stockItem->volume_per_unit);
+                    } else {
+                        $stockItem->quantity += $item->quantity;
+                    }
 
-            Log::info("Inventory updated for stock item {$stockItem->id}. New quantity: {$stockItem->quantity}");
-        } catch (Exception $e) {
-            Log::error("Error updating inventory for stock item {$stockItem->id}: ".$e->getMessage());
-        }
-    }
-
-    public function updateInventoryOnUpdate(): void
-    {
-        $originalItems = $this->getOriginal('items') ?? [];
-        $currentItems = $this->items;
-
-        // Restore inventory for removed or modified items
-        foreach ($originalItems as $originalItem) {
-            $currentItem = $currentItems->firstWhere('id', $originalItem->id);
-            if (! $currentItem || $currentItem->quantity != $originalItem->quantity) {
-                $this->restoreStockItem($originalItem);
-            }
-        }
-
-        // Update inventory for new or modified items
-        foreach ($currentItems as $currentItem) {
-            $originalItem = collect($originalItems)->firstWhere('id', $currentItem->id);
-            if (! $originalItem || $currentItem->quantity != $originalItem->quantity) {
-                $this->updateStockItem($currentItem);
-            }
-        }
-    }
-
-    private function restoreStockItem($item): void
-    {
-        $stockItem = StockItem::find($item->stock_item_id);
-        if (! $stockItem || $stockItem->is_service) {
-            return;
-        }
-
-        try {
-            if ($stockItem->is_liquid) {
-                $stockItem->remaining_volume += $item->quantity;
-                $stockItem->quantity = ceil($stockItem->remaining_volume / $stockItem->volume_per_unit);
-            } else {
-                $stockItem->quantity += $item->quantity;
-            }
-
-            $stockItem->inventory_value = $stockItem->quantity * $stockItem->total;
-            $stockItem->save();
-
-            Log::info("Inventory restored for stock item {$stockItem->id}. New quantity: {$stockItem->quantity}");
-        } catch (Exception $e) {
-            Log::error("Error restoring inventory for stock item {$stockItem->id}: ".$e->getMessage());
-        }
-    }
-
-    public function restoreInventory(): void
-    {
-        foreach ($this->items as $item) {
-            $this->restoreStockItem($item);
-        }
+                    $stockItem->inventory_value = $stockItem->quantity * $stockItem->total;
+                    $stockItem->save();
+                }
+            });
+        });
     }
 
     public function items(): HasMany

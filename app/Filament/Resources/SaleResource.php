@@ -29,22 +29,22 @@ class SaleResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                                         ->sortable(),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('vehicle.customer.name')
-                                         ->searchable()
-                                         ->sortable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('vehicle.vehicle_number')
-                                         ->searchable()
-                                         ->sortable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('transaction_type')->label('Transaction Type')->badge(),
 
                 Tables\Columns\TextColumn::make('total_amount')
-                                         ->money('mvr')
-                                         ->sortable(),
+                    ->money('mvr')
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('transaction_type')
-                                           ->options(TransactionType::class),
+                    ->options(TransactionType::class),
 
             ])
             ->actions([
@@ -62,215 +62,213 @@ class SaleResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Grid::make(12)
-                                     ->schema([
-                                         Forms\Components\Section::make('Sale Items')
-                                                                 ->schema([
-                                                                     Repeater::make('items')
-                                                                             ->relationship()
-                                                                             ->schema([
-                                                                                 Select::make('stock_item_id')
-                                                                                       ->label('Product')
-                                                                                       ->options(StockItem::query()->pluck('product_name',
-                                                                                           'id'))
-                                                                                       ->searchable()
-                                                                                       ->required()
-                                                                                       ->reactive()
-                                                                                       ->live()
-                                                                                       ->afterStateUpdated(function (
-                                                                                           $state,
-                                                                                           Set $set,
-                                                                                           Get $get
-                                                                                       ) {
-                                                                                           if ($state) {
-                                                                                               $stockItem = StockItem::find($state);
-                                                                                               if ($stockItem) {
-                                                                                                   $set('unit_price',
-                                                                                                       $stockItem->total);
-                                                                                                   $set('is_liquid',
-                                                                                                       $stockItem->is_liquid);
-                                                                                                   $set('volume_per_unit',
-                                                                                                       $stockItem->volume_per_unit);
-                                                                                                   $set('quantity', 1);
+                    ->schema([
+                        Forms\Components\Section::make('Sale Items')
+                            ->schema([
+                                Repeater::make('items')
+                                    ->relationship()
+                                    ->reactive()
+                                    ->live()
+                                    ->schema([
+                                        Select::make('stock_item_id')
+                                            ->label('Product')
+                                            ->options(StockItem::query()->pluck('product_name',
+                                                'id'))
+                                            ->searchable()
+                                            ->required()
+                                            ->reactive()
+                                            ->live()
+                                            ->afterStateUpdated(function (
+                                                $state,
+                                                Set $set,
+                                                Get $get
+                                            ) {
+                                                if ($state) {
+                                                    $stockItem = StockItem::find($state);
+                                                    if ($stockItem) {
+                                                        $set('unit_price',
+                                                            $stockItem->total);
+                                                        $set('is_liquid',
+                                                            $stockItem->is_liquid);
+                                                        $set('volume_per_unit',
+                                                            $stockItem->volume_per_unit);
+                                                        $set('quantity', 1);
+                                                        $set('total_price',
+                                                            $stockItem->total);
+                                                        static::updateFormTotals($get,
+                                                            $set);
+                                                    }
+                                                }
+                                            }),
 
-                                                                                                   // Simple calculation for initial total price
-                                                                                                   $set('total_price',
-                                                                                                       $stockItem->total);
 
-                                                                                                   // Update form totals
-                                                                                                   static::updateFormTotals($get,
-                                                                                                       $set);
-                                                                                               }
-                                                                                           }
-                                                                                       }),
+                                        Hidden::make('_original_quantity')
+                                            ->dehydrated(false),
 
-                                                                                 TextInput::make('quantity')
-                                                                                          ->label(function (Get $get) {
-                                                                                              $stockItem = StockItem::find($get('stock_item_id'));
-                                                                                              if ($stockItem && $stockItem->product_type === 'liquid') {
-                                                                                                  return 'Volume (in ML)';
-                                                                                              }
+                                        TextInput::make('quantity')
+                                            ->label(fn (Get $get
+                                            ) => $get('is_liquid') ? 'Volume (in ML)' : 'Quantity')
+                                            ->numeric()
+                                            ->default(1)
+                                            ->required()
+                                            ->reactive()
+                                            ->live()
+                                            ->rules(['min:0'])
+                                            ->afterStateUpdated(function (
+                                                $state,
+                                                Set $set,
+                                                Get $get
+                                            ) {
+                                                $quantity = floatval($state ?? 1);
+                                                $unitPrice = floatval($get('unit_price') ?? 0);
+                                                $set('total_price',
+                                                    round($quantity * $unitPrice,
+                                                        2));
 
-                                                                                              return 'Quantity';
-                                                                                          })
-                                                                                          ->numeric()
-                                                                                          ->default(1)
-                                                                                          ->required()
-                                                                                          ->reactive()
-                                                                                          ->live(onBlur: true)
-                                                                                          ->disabled(function (
-                                                                                              Forms\Get $get
-                                                                                          ) {
-                                                                                              return $get('is_service');
-                                                                                          })
-                                                                                          ->afterStateUpdated(function (
-                                                                                              $state,
-                                                                                              Set $set,
-                                                                                              Get $get
-                                                                                          ) {
-                                                                                              $stockItem = StockItem::find($get('stock_item_id'));
-                                                                                              $quantity = floatval($state ?? 1);
-                                                                                              $unitPrice = floatval($get('unit_price') ?? 0);
-                                                                                              $total = floatval($quantity) * floatval($unitPrice);
-                                                                                              $set('total_price',
-                                                                                                  $total);
-                                                                                          }),
+                                                // The issue is here - we need to make sure we have a valid itemKey
+                                                $itemKey = $get('../../key');
 
-                                                                                 TextInput::make('unit_price')
-                                                                                          ->label('Unit Price')
-                                                                                          ->prefix('MVR')
-                                                                                          ->numeric()
-                                                                                          ->required()
-                                                                                          ->reactive()
-                                                                                          ->readOnly()
-                                                                                          ->dehydrated(true)
-                                                                                          ->afterStateUpdated(function (
-                                                                                              Set $set,
-                                                                                              Get $get
-                                                                                          ) {
-                                                                                              $qty = floatval($get['quantity'] ?? 0);
-                                                                                              $unit_price = floatval($get['unit_price'] ?? 0);
+                                                if ($itemKey !== null) {
+                                                    // Only call the method if we have a valid key
+                                                    static::updateItemTotalByKey($get,
+                                                        $set, $itemKey);
+                                                } else {
+                                                    // Handle the calculation directly if key is missing
+                                                    $set('total_price',
+                                                        round($quantity * $unitPrice,
+                                                            2));
+                                                    static::updateFormTotals($get,
+                                                        $set);
+                                                }
+                                            }),
 
-                                                                                              $total_price = floatval($qty * $unit_price);
-                                                                                              $set('total_price',
-                                                                                                  $total_price);
-                                                                                          }),
+                                        TextInput::make('unit_price')
+                                            ->label('Unit Price')
+                                            ->prefix('MVR')
+                                            ->numeric()
+                                            ->disabled()
+                                            ->dehydrated(true),
 
-                                                                                 TextInput::make('total_price')
-                                                                                          ->label('Total Price')
-                                                                                          ->prefix('MVR')
-                                                                                          ->numeric()
-                                                                                          ->required()
-                                                                                          ->reactive()
-                                                                                          ->readonly(true)
-                                                                                          ->dehydrated(true)
-                                                                                          ->afterStateUpdated(function (
-                                                                                              Set $set,
-                                                                                              Get $get
-                                                                                          ) {
-                                                                                              $qty = floatval($get['quantity'] ?? 0);
-                                                                                              $unit_price = floatval($get['unit_price'] ?? 0);
+                                        TextInput::make('total_price')
+                                            ->label('Total Price')
+                                            ->prefix('MVR')
+                                            ->numeric()
+                                            ->disabled()
+                                            ->dehydrated(true),
+                                    ])
+                                    ->afterStateUpdated(fn (
+                                        Get $get,
+                                        Set $set
+                                    ) => static::updateFormTotals($get, $set))
+                                    ->columns(4)
+                                    ->defaultItems(0),
 
-                                                                                              $total_price = floatval($qty * $unit_price);
-                                                                                              $set('total_price',
-                                                                                                  $total_price);
-                                                                                          }),
+                            ])
+                            ->columnSpan(9),
 
-                                                                                 Hidden::make('volume_per_unit'),
-                                                                             ])
-                                                                             ->columns(4)
-                                                                             ->defaultItems(0),
+                        Forms\Components\Section::make('Sale Details')
+                            ->schema([
+                                Forms\Components\DatePicker::make('date')
+                                    ->required()
+                                    ->default(now()),
+                                Forms\Components\Select::make('vehicle_id')
+                                    ->label('Vehicle')
+                                    ->relationship('vehicle',
+                                        'vehicle_number')
+                                    ->searchable()
+                                    ->required(),
 
-                                                                 ])
-                                                                 ->columnSpan(9),
+                                Forms\Components\Select::make('transaction_type')->label('Transaction Type')
+                                    ->options(TransactionType::class)
+                                    ->default(TransactionType::PENDING)
+                                    ->required()
+                                    ->reactive(),
 
-                                         Forms\Components\Section::make('Sale Details')
-                                                                 ->schema([
-                                                                     Forms\Components\DatePicker::make('date')
-                                                                                                ->required()
-                                                                                                ->default(now()),
-                                                                     Forms\Components\Select::make('vehicle_id')
-                                                                                            ->label('Vehicle')
-                                                                                            ->relationship('vehicle',
-                                                                                                'vehicle_number')
-                                                                                            ->searchable()
-                                                                                            ->required(),
+                                TextInput::make('subtotal_amount')
+                                    ->label('Subtotal')
+                                    ->prefix('MVR')
+                                    ->disabled()
+                                    ->reactive()
+                                    ->live(),
 
-                                                                     Forms\Components\Select::make('transaction_type')->label('Transaction Type')
-                                                                                            ->options(TransactionType::class)
-                                                                                            ->default(TransactionType::PENDING)
-                                                                                            ->required()
-                                                                                            ->reactive(),
+                                TextInput::make('discount_percentage')
+                                    ->label('Discount %')
+                                    ->suffix('%')
+                                    ->default(0)
+                                    ->reactive()
+                                    ->live(),
 
-                                                                     Forms\Components\TextInput::make('subtotal_amount')
-                                                                                               ->label('Subtotal')
-                                                                                               ->numeric()
-                                                                                               ->prefix('MVR')
-                                                                                               ->disabled(),
-                                                                     Forms\Components\TextInput::make('discount_percentage')
-                                                                                               ->label('Discount %')
-                                                                                               ->numeric()
-                                                                                               ->default(0)
-                                                                                               ->suffix('%')
-                                                                                               ->reactive()
-                                                                                               ->afterStateUpdated(function (
-                                                                                                   Get $get,
-                                                                                                   Set $set
-                                                                                               ) {
-                                                                                                   $subtotal = floatval($get('subtotal_amount') ?? 0);
-                                                                                                   $discountPercentage = floatval($get('discount_percentage') ?? 0);
-                                                                                                   $discountAmount = $subtotal * ($discountPercentage / 100);
-                                                                                                   $totalAmount = $subtotal - $discountAmount;
-                                                                                                   $set('discount_amount',
-                                                                                                       round($discountAmount,
-                                                                                                           2));
-                                                                                                   $set('total_amount',
-                                                                                                       round($totalAmount,
-                                                                                                           2));
-                                                                                               }),
+                                TextInput::make('discount_amount')
+                                    ->label('Discount Amount')
+                                    ->prefix('MVR')
+                                    ->disabled()
+                                    ->reactive()
+                                    ->dehydrated(true),
 
-                                                                     Forms\Components\TextInput::make('discount_amount')
-                                                                                               ->label('Discount Amount')
-                                                                                               ->numeric()
-                                                                                               ->prefix('MVR')
-                                                                                               ->default(0)
-                                                                                               ->disabled()
-                                                                                               ->dehydrated(true),
-
-                                                                     Forms\Components\TextInput::make('total_amount')
-                                                                                               ->label('Total Amount')
-                                                                                               ->numeric()
-                                                                                               ->prefix('MVR')
-                                                                                               ->readOnly(),
-
-                                                                     Forms\Components\Textarea::make('remarks')
-                                                                                              ->rows(3),
-                                                                 ])
-                                                                 ->columnSpan(3),
-                                     ]),
+                                TextInput::make('total_amount')
+                                    ->label('Total Amount')
+                                    ->prefix('MVR')
+                                    ->reactive()
+                                    ->readOnly(),
+                            ]),
+                    ]),
             ]);
     }
 
-    protected static function updateFormTotals(Get $get, Set $set): void
+    protected static function updateFormTotals(Forms\Get $get, Forms\Set $set): void
     {
-        // Calculate subtotal from repeater items
         $items = $get('items') ?? [];
-        $subtotal = 0;
-
-        foreach ($items as $item) {
-            $subtotal += floatval($item['total_price'] ?? 0);
-        }
-
+        $subtotal = array_sum(array_column($items, 'total_price'));
         $set('subtotal_amount', round($subtotal, 2));
 
-        // Calculate discount
         $discountPercentage = floatval($get('discount_percentage') ?? 0);
-        $discountAmount = ($subtotal * $discountPercentage) / 100;
+        $discountAmount = $subtotal * ($discountPercentage / 100);
         $set('discount_amount', round($discountAmount, 2));
 
-        // Calculate final total
         $totalAmount = $subtotal - $discountAmount;
         $set('total_amount', round($totalAmount, 2));
     }
+
+    protected static function updateItemTotalByKey(Get $get, Set $set, ?string $itemKey): void
+    {
+        // Return early if no key is provided
+        if ($itemKey === null) {
+            return;
+        }
+
+        $quantity = floatval($get("items.{$itemKey}.quantity") ?? 1);
+        $unitPrice = floatval($get("items.{$itemKey}.unit_price") ?? 0);
+        $totalPrice = round($quantity * $unitPrice, 2);
+        $set("items.{$itemKey}.total_price", $totalPrice);
+    }
+
+
+
+    //    protected static function updateFormTotals(Get $get, Set $set): void
+    //    {
+    //        // Get all items from the repeater
+    //        $items = $get('items') ?? [];
+    //
+    //        // Calculate subtotal by summing all total_price values
+    //        $subtotal = 0;
+    //        foreach ($items as $item) {
+    //            if (isset($item['total_price'])) {
+    //                $subtotal += floatval($item['total_price']);
+    //            }
+    //        }
+    //
+    //        // Set the subtotal
+    //        $set('subtotal_amount', round($subtotal, 2));
+    //
+    //        // Calculate discount
+    //        $discountPercentage = floatval($get('discount_percentage') ?? 0);
+    //        $discountAmount = ($subtotal * $discountPercentage) / 100;
+    //        $set('discount_amount', round($discountAmount, 2));
+    //
+    //        // Calculate final total
+    //        $totalAmount = $subtotal - $discountAmount;
+    //        $set('total_amount', round($totalAmount, 2));
+    //    }
 
     public static function getRelations(): array
     {
@@ -282,17 +280,9 @@ class SaleResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListSales::route('/'),
+            'index' => Pages\ListSales::route('/'),
             'create' => Pages\CreateSale::route('/create'),
-            'edit'   => Pages\EditSale::route('/{record}/edit'),
+            'edit' => Pages\EditSale::route('/{record}/edit'),
         ];
-    }
-
-    protected static function updateItemTotalByKey(Get $get, Set $set, string $itemKey): void
-    {
-        $quantity = floatval($get("items.{$itemKey}.quantity") ?? 1);
-        $unitPrice = floatval($get("items.{$itemKey}.unit_price") ?? 0);
-        $totalPrice = round($quantity * $unitPrice, 2);
-        $set("items.{$itemKey}.total_price", $totalPrice);
     }
 }
