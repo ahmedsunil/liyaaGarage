@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use Log;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,26 +10,34 @@ class SaleItem extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'unit_price'       => 'decimal:2',
-        'total_price'      => 'decimal:2',
+        'unit_price' => 'decimal:2',
+        'total_price' => 'decimal:2',
         'includes_service' => 'boolean',
     ];
 
-    public static function boot(): void
+    protected static function boot()
     {
         parent::boot();
 
-        static::created(function (SaleItem $model) {
-            DB::transaction(function () use ($model) {
-                $stock = $model->stockItem()->lockForUpdate()->first();
-                if ($stock && ! $stock->is_service) {
-                    $stock->quantity -= $model->quantity;
-                    $stock->save();
+        static::updated(function ($salesItem) {
+            $adjustment = $salesItem->getOriginal('quantity') - $salesItem->quantity;
+
+            $stockItem = $salesItem->stockItem;
+            if ($adjustment > 0) {
+                // Restore stock
+                $stockItem->quantity += $adjustment;
+            } elseif ($adjustment < 0) {
+                // Deduct more stock
+                if ($stockItem->quantity >= abs($adjustment)) {
+                    $stockItem->quantity -= abs($adjustment);
+                } else {
+                    // Handle insufficient stock
+                    throw new Exception('Insufficient stock for item '.$stockItem->id);
                 }
-            });
+            }
+
+            $stockItem->save();
         });
-
-
     }
 
     public function stockItem(): BelongsTo
