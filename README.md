@@ -1,14 +1,7 @@
 
-# Project Yesterday: Fast-Track Laravel Development
 
 LIYA GARAGE
 
-Boost your Laravel projects with Project Yesterday to meet tight deadlines by delivering them as if they were due yesterday. All essential features are pre-built, tested, and ready for deployment. These include:
-
-1. User Management
-2. Roles and Permissions
-3. Activity Log
-4. Site Settings
 
 ## Installation
 1. Clone the Repository:
@@ -35,6 +28,3 @@ To get started with Project Yesterday:
    - Visit `/admin` and use the following credentials to log in:
      - Email: admin@example.com 
      - Password: password
-
-## License
-Project Yesterday is licensed under the [MIT](https://choosealicense.com/licenses/mit/) License.
