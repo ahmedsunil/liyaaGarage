@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -10,8 +11,8 @@ class SaleItem extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'unit_price' => 'decimal:2',
-        'total_price' => 'decimal:2',
+        'unit_price'       => 'decimal:2',
+        'total_price'      => 'decimal:2',
         'includes_service' => 'boolean',
     ];
 
