@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,4 +17,11 @@ class Customer extends Model
     {
         return $this->hasMany(Vehicle::class);
     }
+
+    public function sales(): hasMany
+    {
+        return $this->hasMany(Sale::class);
+    }
+
+
 }
