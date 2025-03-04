@@ -2,9 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use DB;
 use Exception;
-use Throwable;
 use Filament\Forms;
 use App\Models\Sale;
 use Filament\Tables;
@@ -26,6 +24,9 @@ class SaleResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
 
+    /**
+     * @throws Exception
+     */
     public static function table(Table $table): Table
     {
         return $table
@@ -283,6 +284,4 @@ class SaleResource extends Resource
             'edit'   => Pages\EditSale::route('/{record}/edit'),
         ];
     }
-
-
 }
