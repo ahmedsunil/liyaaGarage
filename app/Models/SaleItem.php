@@ -11,8 +11,8 @@ class SaleItem extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'unit_price'       => 'decimal:2',
-        'total_price'      => 'decimal:2',
+        'unit_price' => 'decimal:2',
+        'total_price' => 'decimal:2',
         'includes_service' => 'boolean',
     ];
 
