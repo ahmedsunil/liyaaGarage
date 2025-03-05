@@ -129,8 +129,9 @@ class Sale extends Model
         return $this->belongsTo(Vehicle::class);
     }
 
-    public function customer(): BelongsTo
+    public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->vehicle->customer();
     }
+
 }
