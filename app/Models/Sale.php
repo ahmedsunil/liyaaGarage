@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Log;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use App\Support\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Model;
@@ -129,9 +128,14 @@ class Sale extends Model
         return $this->belongsTo(Vehicle::class);
     }
 
-    public function customer()
+    public function customer(): BelongsTo
     {
-        return $this->vehicle->customer();
+        return $this->belongsTo(Customer::class);
     }
+
+    //    public function customer()
+    //    {
+    //        return $this->vehicle->customer();
+    //    }
 
 }

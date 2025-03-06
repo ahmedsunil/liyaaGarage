@@ -315,17 +315,6 @@ class StockItemResource extends Resource
                                             ->readOnly()
                                             ->dehydrated(),
 
-                                        Forms\Components\TextInput::make('inventory_value')
-                                            ->label('Inventory Value')
-                                            ->numeric()
-                                            ->prefix('MVR')
-                                            ->readOnly()
-                                            ->step(0.01)
-                                            ->visible(fn (
-                                                Get $get
-                                            ) => ! $get('is_service'))
-                                            ->dehydrated(),
-
                                         Forms\Components\TextInput::make('quantity')
                                             ->label('Stock Quantity')
                                             ->helperText(fn (
@@ -360,56 +349,7 @@ class StockItemResource extends Resource
                                                 Get $get
                                             ) => ! $get('is_service'))
                                             ->required()
-                                            ->live(onBlur: true),
-
-
-                                        Forms\Components\TextInput::make('volume_per_unit')
-                                            ->label('Volume per Unit')
-                                            ->numeric()
-                                            ->step(0.01)
-                                            ->suffix('ML')
-                                            ->required()
-                                            ->rules([
-                                                'numeric',
-                                                'min:0',
-                                            ])
-                                            ->visible(fn (
-                                                Get $get
-                                            ) => $get('product_type') === 'liquid')
                                             ->live(onBlur: true)
-                                            ->afterStateUpdated(function (
-                                                Get $get,
-                                                Set $set
-                                            ) {
-                                                $total_volume = (floatval($get('quantity') ?? 0)) * floatval($get('volume_per_unit') ?? 0);
-                                                $set('remaining_volume',
-                                                    $total_volume);
-                                            }),
-                                        Forms\Components\TextInput::make('remaining_volume')
-                                            ->label('Remaining Volume')
-                                            ->numeric()
-                                            ->step(0.01)
-                                            ->suffix('ML')
-                                            ->dehydrated(true) // Explicitly set to true
-                                            ->readOnly() // Read-only instead
-                                            ->visible(fn (
-                                                Get $get
-                                            ) => $get('product_type') === 'liquid')
-                                            ->reactive()
-                                            ->afterStateUpdated(function (
-                                                Get $get,
-                                                Set $set
-                                            ) {
-                                                $volumePerUnit = floatval($get('volume_per_unit') ?? 0);
-                                                $remainingVolume = floatval($get('remaining_volume') ?? 0);
-
-                                                if ($volumePerUnit > 0) {
-                                                    $wholeUnits = floor($remainingVolume / $volumePerUnit);
-                                                    $set('quantity',
-                                                        $wholeUnits);
-                                                }
-                                            }),
-                                    ])
                                     ->columns(4),
                             ]),
                     ]),
