@@ -11,6 +11,7 @@ enum StockStatus: string implements HasColor, HasIcon, HasLabel
     case IN_STOCK = 'in_stock';
     case LOW_STOCK = 'low_stock';
     case OUT_OF_STOCK = 'out_of_stock';
+    case AVAILABLE = 'available';
 
 
     public function getLabel(): string
@@ -19,6 +20,7 @@ enum StockStatus: string implements HasColor, HasIcon, HasLabel
             self::IN_STOCK => 'In Stock',
             self::LOW_STOCK => 'Low Stock',
             self::OUT_OF_STOCK => 'Out of Stock',
+            self::AVAILABLE => 'Available',
         };
     }
 
@@ -28,6 +30,7 @@ enum StockStatus: string implements HasColor, HasIcon, HasLabel
             self::IN_STOCK => 'success',
             self::LOW_STOCK => 'warning',
             self::OUT_OF_STOCK => 'danger',
+            self::AVAILABLE => 'information',
         };
     }
 
@@ -37,6 +40,7 @@ enum StockStatus: string implements HasColor, HasIcon, HasLabel
             self::IN_STOCK => 'heroicon-m-shopping-cart',
             self::LOW_STOCK => 'heroicon-m-arrow-trending-down',
             self::OUT_OF_STOCK => 'heroicon-m-information-circle',
+            self::AVAILABLE => 'heroicon-m-wrench-screwdriver',
         };
     }
 }
