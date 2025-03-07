@@ -70,6 +70,7 @@ class SaleResource extends Resource
                         Forms\Components\Section::make('Sale Items')
                             ->schema([
                                 Repeater::make('items')
+                                    ->relationship('items')
                                     ->schema([
                                         Select::make('stock_item_id')
                                             ->label('Product')
@@ -78,32 +79,35 @@ class SaleResource extends Resource
                                             ->searchable()
                                             ->required()
                                             ->reactive()
+                                            ->live()
                                             ->afterStateUpdated(function (
                                                 $state,
                                                 Set $set,
                                                 Get $get
                                             ) {
-                                                // Fetch the StockItem to get the selling price
+                                                if (! $state) {
+                                                    return;
+                                                }
+
                                                 $stockItem = StockItem::find($state);
+                                                $itemKey = $get('../../key');
 
                                                 if ($stockItem) {
-                                                    if (! $stockItem->is_service->value) {
-                                                        $set('selling_price_per_quantity',
-                                                            $stockItem->selling_price_per_quantity);
-                                                        $quantity = floatval($get('quantity') ?? 1);
-                                                        $unitPrice = floatval($stockItem->selling_price_per_quantity ?? 1);
-                                                        $set('total_price',
-                                                            round($quantity * $unitPrice,
-                                                                2));
-                                                    }
+                                                    // Set unit_price based on service type
+                                                    $unitPrice = $stockItem->is_service
+                                                        ? $stockItem->total_cost_price_with_gst
+                                                        : $stockItem->selling_price_per_quantity;
 
-                                                    if ($stockItem->is_service->value) {
-                                                        $set('selling_price_per_quantity',
-                                                            $stockItem->total_cost_price_with_gst);
-                                                        $unitPrice = floatval($stockItem->total_cost_price_with_gst ?? 1);
-                                                        $set('total_price',
-                                                            $unitPrice);
-                                                    }
+                                                    // Update the unit_price field directly
+                                                    $set('unit_price',
+                                                        $unitPrice);
+
+                                                    // Calculate and update total price
+                                                    $quantity = floatval($get('quantity') ?? 1);
+                                                    $total = round($quantity * $unitPrice,
+                                                        2);
+                                                    $set('total_price',
+                                                        $total);
                                                 }
                                             }),
 
@@ -113,41 +117,27 @@ class SaleResource extends Resource
                                             ->minValue(1)
                                             ->default(1)
                                             ->required()
-                                            ->live(onBlur: true)
+                                            ->reactive()
+                                            ->live()
                                             ->afterStateUpdated(function (
                                                 $state,
                                                 Set $set,
                                                 Get $get
                                             ) {
-                                                $stockItem = StockItem::find($state);
+                                                // Get the current unit price directly from the form
+                                                $unitPrice = floatval($get('unit_price') ?? 0);
+                                                $quantity = floatval($state ?? 1);
 
-                                                if ($stockItem) {
-                                                    if (! $stockItem->is_service->value) {
-                                                        $set('selling_price_per_quantity',
-                                                            $stockItem->selling_price_per_quantity);
-                                                        $quantity = floatval($get('quantity') ?? 1);
-                                                        $unitPrice = floatval($stockItem->selling_price_per_quantity ?? 1);
-                                                        $set('total_price',
-                                                            round($quantity * $unitPrice,
-                                                                2));
-                                                        static::updateFormTotals($get,
-                                                            $set);
-                                                    }
+                                                // Calculate new total
+                                                $total = round($quantity * $unitPrice,
+                                                    2);
 
-                                                    if ($stockItem->is_service->value) {
-                                                        $set('selling_price_per_quantity',
-                                                            $stockItem->total_cost_price_with_gst);
-                                                        $unitPrice = floatval($stockItem->total_cost_price_with_gst ?? 1);
-                                                        $set('total_price',
-                                                            $unitPrice);
-                                                        static::updateFormTotals($get,
-                                                            $set);
-                                                    }
-                                                }
+                                                // Update total price directly
+                                                $set('total_price',
+                                                    $total);
                                             }),
 
-
-                                        TextInput::make('selling_price_per_quantity')
+                                        TextInput::make('unit_price')
                                             ->label('Unit Price')
                                             ->prefix('MVR')
                                             ->numeric()
@@ -159,23 +149,12 @@ class SaleResource extends Resource
                                             ->prefix('MVR')
                                             ->numeric()
                                             ->readOnly()
+                                            ->reactive()
                                             ->dehydrated(true),
                                     ])
-                                    ->afterStateUpdated(fn (
-                                        Get $get,
-                                        Set $set
-                                    ) => static::updateFormTotals($get, $set))
                                     ->columns(4)
-                                    ->unique()
-                                    ->live()
-                                    ->afterStateUpdated(function (
-                                        Get $get,
-                                        Set $set
-                                    ) {
-                                        static::updateFormTotals($get, $set);
-                                    })
-                                    ->columnSpan(9),
-
+                                    ->columnSpan(9)
+                                    ->live(),
                                 Forms\Components\Section::make('Sale Details')
                                     ->schema([
                                         Forms\Components\DatePicker::make('date')
@@ -241,20 +220,6 @@ class SaleResource extends Resource
             ]);
     }
 
-    protected static function updateFormTotals(Forms\Get $get, Forms\Set $set): void
-    {
-        $items = $get('items') ?? [];
-        $subtotal = array_sum(array_column($items, 'total_price'));
-        $set('subtotal_amount', round($subtotal, 2));
-
-        $discountPercentage = floatval($get('discount_percentage') ?? 0);
-        $discountAmount = $subtotal * ($discountPercentage / 100);
-        $set('discount_amount', round($discountAmount, 2));
-
-        $totalAmount = $subtotal - $discountAmount;
-        $set('total_amount', round($totalAmount, 2));
-    }
-
     public static function getRelations(): array
     {
         return [
@@ -279,8 +244,22 @@ class SaleResource extends Resource
     //        }
     //
     //        $quantity = floatval($get("items.{$itemKey}.quantity") ?? 1);
-    //        $unitPrice = floatval($get("items.{$itemKey}.selling_price_per_quantity") ?? 0);
+    //        $unitPrice = floatval($get("items.{$itemKey}.unit_price") ?? 0);
     //        $totalPrice = round($quantity * $unitPrice, 2);
     //        $set("items.{$itemKey}.total_price", $totalPrice);
+    //    }
+
+    //    protected static function updateFormTotals(Forms\Get $get, Forms\Set $set): void
+    //    {
+    //        $items = $get('items') ?? [];
+    //        $subtotal = array_sum(array_column($items, 'total_price'));
+    //        $set('subtotal_amount', round($subtotal, 2));
+    //
+    //        $discountPercentage = floatval($get('discount_percentage') ?? 0);
+    //        $discountAmount = $subtotal * ($discountPercentage / 100);
+    //        $set('discount_amount', round($discountAmount, 2));
+    //
+    //        $totalAmount = $subtotal - $discountAmount;
+    //        $set('total_amount', round($totalAmount, 2));
     //    }
 }

@@ -14,10 +14,8 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('sale_id')->constrained()->cascadeOnDelete();
             $table->foreignId('stock_item_id')->constrained()->cascadeOnDelete();
-            $table->string('description');
             $table->integer('quantity');
             $table->decimal('unit_price', 10, 2);
-            $table->boolean('includes_service')->default(false);
             $table->decimal('total_price', 10, 2);
             $table->timestamps();
         });
