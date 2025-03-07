@@ -90,24 +90,31 @@ class SaleResource extends Resource
                                                 }
 
                                                 $stockItem = StockItem::find($state);
-                                                $itemKey = $get('../../key');
-
                                                 if ($stockItem) {
-                                                    // Set unit_price based on service type
-                                                    $unitPrice = $stockItem->is_service
+                                                    // Set unit price based on service type
+                                                    $unitPrice = $stockItem->is_service->value
                                                         ? $stockItem->total_cost_price_with_gst
                                                         : $stockItem->selling_price_per_quantity;
 
-                                                    // Update the unit_price field directly
                                                     $set('unit_price',
                                                         $unitPrice);
 
-                                                    // Calculate and update total price
-                                                    $quantity = floatval($get('quantity') ?? 1);
+                                                    // If it's a service, force quantity to 1
+                                                    if ($stockItem->is_service->value === 1) {
+                                                        $set('quantity', 1);
+                                                    }
+
+                                                    // Calculate total
+                                                    $quantity = $stockItem->is_service->value ? 1 : floatval($get('quantity') ?? 1);
                                                     $total = round($quantity * $unitPrice,
                                                         2);
+
                                                     $set('total_price',
                                                         $total);
+
+                                                    self::calculateTotals($set,
+                                                        $get);
+
                                                 }
                                             }),
 
@@ -118,24 +125,36 @@ class SaleResource extends Resource
                                             ->default(1)
                                             ->required()
                                             ->reactive()
-                                            ->live()
+                                            ->live('true')
+                                            ->disabled(fn (Get $get
+                                            ): bool => StockItem::find($get('stock_item_id'))?->is_service->value == '1'
+                                            )
                                             ->afterStateUpdated(function (
                                                 $state,
                                                 Set $set,
                                                 Get $get
                                             ) {
-                                                // Get the current unit price directly from the form
+                                                // Calculate total price
                                                 $unitPrice = floatval($get('unit_price') ?? 0);
                                                 $quantity = floatval($state ?? 1);
-
-                                                // Calculate new total
-                                                $total = round($quantity * $unitPrice,
-                                                    2);
-
-                                                // Update total price directly
                                                 $set('total_price',
-                                                    $total);
+                                                    round($quantity * $unitPrice,
+                                                        2));
+                                                self::calculateTotals($set,
+                                                    $get);
                                             }),
+                                        //                                                                                          ->afterStateUpdated(function (
+                                        //                                                                                              $state,
+                                        //                                                                                              Set $set,
+                                        //                                                                                              Get $get
+                                        //                                                                                          ) {
+                                        //                                                                                              $unitPrice = floatval($get('unit_price') ?? 0);
+                                        //                                                                                              $quantity = floatval($state ?? 1);
+                                        //                                                                                              $total = round($quantity * $unitPrice,
+                                        //                                                                                                  2);
+                                        //                                                                                              $set('total_price',
+                                        //                                                                                                  $total);
+                                        //                                                                                          }),
 
                                         TextInput::make('unit_price')
                                             ->label('Unit Price')
@@ -149,12 +168,33 @@ class SaleResource extends Resource
                                             ->prefix('MVR')
                                             ->numeric()
                                             ->readOnly()
-                                            ->reactive()
                                             ->dehydrated(true),
                                     ])
                                     ->columns(4)
                                     ->columnSpan(9)
-                                    ->live(),
+                                    ->live()
+                                    ->afterStateUpdated(function (
+                                        Set $set,
+                                        Get $get
+                                    ) {
+                                        self::calculateTotals($set, $get);
+                                    }),
+                                //                                                                             ->afterStateUpdated(function (
+                                //                                                                                 $state,
+                                //                                                                                 Set $set,
+                                //                                                                                 Get $get
+                                //                                                                             ) {
+                                //                                                                                 $subtotal = collect($state ?? [])->sum('total_price');
+                                //                                                                                 $discountPercentage = floatval($get('discount_percentage') ?? 0);
+                                //                                                                                 $discountAmount = round(($subtotal * $discountPercentage) / 100,
+                                //                                                                                     2);
+                                //
+                                //                                                                                 $set('subtotal_amount', $subtotal);
+                                //                                                                                 $set('discount_amount',
+                                //                                                                                     $discountAmount);
+                                //                                                                                 $set('total_amount',
+                                //                                                                                     $subtotal - $discountAmount);
+                                //                                                                             }),
                                 Forms\Components\Section::make('Sale Details')
                                     ->schema([
                                         Forms\Components\DatePicker::make('date')
@@ -192,47 +232,71 @@ class SaleResource extends Resource
                                             ->label('Subtotal')
                                             ->prefix('MVR')
                                             ->disabled()
-                                            ->reactive()
                                             ->live(),
 
                                         TextInput::make('discount_percentage')
                                             ->label('Discount %')
                                             ->suffix('%')
                                             ->default(0)
-                                            ->reactive()
-                                            ->live(),
+                                            ->live()
+                                            ->afterStateUpdated(function (
+                                                $state,
+                                                Set $set,
+                                                Get $get
+                                            ) {
+                                                self::calculateTotals($set,
+                                                    $get);
+                                            }),
+                                        //                                                                                                          ->afterStateUpdated(function (
+                                        //                                                                                                              $state,
+                                        //                                                                                                              Set $set,
+                                        //                                                                                                              Get $get
+                                        //                                                                                                          ) {
+                                        //                                                                                                              $subtotal = floatval($get('subtotal_amount'));
+                                        //                                                                                                              $discountAmount = round(($subtotal * floatval($state ?? 0)) / 100,
+                                        //                                                                                                                  2);
+                                        //
+                                        //                                                                                                              $set('discount_amount',
+                                        //                                                                                                                  $discountAmount);
+                                        //                                                                                                              $set('total_amount',
+                                        //                                                                                                                  $subtotal - $discountAmount);
+                                        //                                                                                                          }),
 
                                         TextInput::make('discount_amount')
                                             ->label('Discount Amount')
                                             ->prefix('MVR')
                                             ->disabled()
-                                            ->reactive()
-                                            ->dehydrated(true),
+                                            ->dehydrated(),
 
                                         TextInput::make('total_amount')
                                             ->label('Total Amount')
                                             ->prefix('MVR')
-                                            ->reactive()
-                                            ->readOnly(),
+                                            ->disabled()
+                                            ->dehydrated(),
                                     ]),
                             ]),
                     ]),
             ]);
     }
 
+    protected static function calculateTotals(Set $set, Get $get): void
+    {
+        $subtotal = collect($get('items'))->sum(function ($item) {
+            return floatval($item['quantity'] ?? 1) * floatval($item['unit_price'] ?? 0);
+        });
+
+        $discountPercentage = floatval($get('discount_percentage') ?? 0);
+        $discountAmount = round(($subtotal * $discountPercentage) / 100, 2);
+
+        $set('subtotal_amount', $subtotal);
+        $set('discount_amount', $discountAmount);
+        $set('total_amount', $subtotal - $discountAmount);
+    }
+
     public static function getRelations(): array
     {
         return [
             //
-        ];
-    }
-
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListSales::route('/'),
-            'create' => Pages\CreateSale::route('/create'),
-            'edit' => Pages\EditSale::route('/{record}/edit'),
         ];
     }
 
@@ -262,4 +326,13 @@ class SaleResource extends Resource
     //        $totalAmount = $subtotal - $discountAmount;
     //        $set('total_amount', round($totalAmount, 2));
     //    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListSales::route('/'),
+            'create' => Pages\CreateSale::route('/create'),
+            'edit' => Pages\EditSale::route('/{record}/edit'),
+        ];
+    }
 }
