@@ -36,42 +36,42 @@ class StockItemResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('item_code')
-                                         ->label('Code')
-                                         ->searchable(),
+                    ->label('Code')
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('product_name')
-                                         ->label('Name')
-                                         ->searchable(),
+                    ->label('Name')
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('is_service')
-                                         ->label('Type')
-                                         ->badge()
-                                         ->searchable(),
+                    ->label('Type')
+                    ->badge()
+                    ->searchable(),
 
                 Tables\Columns\TextColumn::make('total_cost_price_with_gst')
-                                         ->label('Total Cost Price With GST')
-                                         ->money('MVR')
-                                         ->sortable(),
+                    ->label('Total Cost Price With GST')
+                    ->money('MVR')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('quantity')
-                                         ->numeric()
-                                         ->sortable()
-                                         ->hidden(fn(Builder $query): bool => $query->where('is_service',
-                                             true)->exists()),
+                    ->numeric()
+                    ->sortable()
+                    ->hidden(fn (Builder $query): bool => $query->where('is_service',
+                        true)->exists()),
 
                 Tables\Columns\TextColumn::make('stock_status')
-                                         ->label('Status')
-                                         ->badge()
-                                         ->searchable(),
+                    ->label('Status')
+                    ->badge()
+                    ->searchable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
-                                           ->label('Item Type')
-                                           ->options([
-                                               '0' => 'Products',
-                                               '1' => 'Services',
-                                           ])
-                                           ->attribute('is_service'),
+                    ->label('Item Type')
+                    ->options([
+                        '0' => 'Products',
+                        '1' => 'Services',
+                    ])
+                    ->attribute('is_service'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -80,62 +80,62 @@ class StockItemResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                     BulkAction::make('update-quantity')
-                              ->label('Update Quantity')
-                              ->icon('heroicon-o-plus')
-                              ->requiresConfirmation()
-                              ->deselectRecordsAfterCompletion()
-                              ->form([  // Changed from function to direct array
-                                  TextInput::make('quantity')
-                                           ->label('Quantity to Add')
-                                           ->numeric()
-                                           ->required()
-                                           ->minValue(1)
-                                           ->rules(['min:1']),
-                              ])
-                              ->action(function (Collection $records, array $data) {
-                                  $quantityToAdd = floatval($data['quantity']);
+                        ->label('Update Quantity')
+                        ->icon('heroicon-o-plus')
+                        ->requiresConfirmation()
+                        ->deselectRecordsAfterCompletion()
+                        ->form([  // Changed from function to direct array
+                            TextInput::make('quantity')
+                                ->label('Quantity to Add')
+                                ->numeric()
+                                ->required()
+                                ->minValue(1)
+                                ->rules(['min:1']),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $quantityToAdd = floatval($data['quantity']);
 
-                                  $records->each(function ($record) use ($quantityToAdd) {
-                                      if (! $record->is_service) {
-                                          $record->quantity += $quantityToAdd;
-                                          $record->save();
-                                      }
-                                  });
+                            $records->each(function ($record) use ($quantityToAdd) {
+                                if (! $record->is_service) {
+                                    $record->quantity += $quantityToAdd;
+                                    $record->save();
+                                }
+                            });
 
-                                  Notification::make()
-                                              ->success()
-                                              ->title('Quantities updated successfully')
-                                              ->send();
-                              }),
+                            Notification::make()
+                                ->success()
+                                ->title('Quantities updated successfully')
+                                ->send();
+                        }),
 
                     BulkAction::make('deduct-quantity')
-                              ->label('Deduct Quantity')
-                              ->icon('heroicon-o-minus')
-                              ->requiresConfirmation()
-                              ->deselectRecordsAfterCompletion()
-                              ->form([  // Changed from function to direct array
-                                  TextInput::make('quantity')
-                                           ->label('Quantity to Deduct')
-                                           ->numeric()
-                                           ->required()
-                                           ->minValue(1)
-                                           ->rules(['min:1']),
-                              ])
-                              ->action(function (Collection $records, array $data) {
-                                  $quantityToAdd = floatval($data['quantity']);
+                        ->label('Deduct Quantity')
+                        ->icon('heroicon-o-minus')
+                        ->requiresConfirmation()
+                        ->deselectRecordsAfterCompletion()
+                        ->form([  // Changed from function to direct array
+                            TextInput::make('quantity')
+                                ->label('Quantity to Deduct')
+                                ->numeric()
+                                ->required()
+                                ->minValue(1)
+                                ->rules(['min:1']),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $quantityToAdd = floatval($data['quantity']);
 
-                                  $records->each(function ($record) use ($quantityToAdd) {
-                                      if (! $record->is_service) {
-                                          $record->quantity -= $quantityToAdd;
-                                          $record->save();
-                                      }
-                                  });
+                            $records->each(function ($record) use ($quantityToAdd) {
+                                if (! $record->is_service) {
+                                    $record->quantity -= $quantityToAdd;
+                                    $record->save();
+                                }
+                            });
 
-                                  Notification::make()
-                                              ->success()
-                                              ->title('Quantities updated successfully')
-                                              ->send();
-                              }),
+                            Notification::make()
+                                ->success()
+                                ->title('Quantities updated successfully')
+                                ->send();
+                        }),
 
                 ]),
             ]);
@@ -146,190 +146,195 @@ class StockItemResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make()
-                                        ->schema([
-                                            Forms\Components\ToggleButtons::make('is_service')
-                                                                          ->label('Product Type')
-                                                                          ->inline()
-                                                                          ->live()
-                                                                          ->required()
-                                                                          ->options([
-                                                                              0 => 'Product',
-                                                                              1 => 'Service',
-                                                                          ])
-                                                                          ->colors([
-                                                                              0 => 'success',
-                                                                              1 => 'warning',
-                                                                          ])
-                                                                          ->icons([
-                                                                              0 => 'heroicon-m-shopping-bag',
-                                                                              1 => 'heroicon-m-wrench-screwdriver',
-                                                                          ])
-                                                                          ->default(0)
-                                                                          ->disabled(fn(
-                                                                              $livewire
-                                                                          ) => $livewire instanceof EditRecord)
-                                                                          ->afterStateUpdated(function (
-                                                                              Get $get,
-                                                                              Set $set
-                                                                          ) {
-                                                                              $set('total_cost_price',
-                                                                                  null);
-                                                                              $set('gst',
-                                                                                  null);
-                                                                              $set('total_cost_price_with_gst',
-                                                                                  null);
-                                                                              $set('cost_price_per_quantity',
-                                                                                  null);
-                                                                              $set('selling_price_per_quantity',
-                                                                                  null);
-                                                                              $set('quantity',
-                                                                                  null);
-                                                                              $set('quantity_threshold',
-                                                                                  null);
-                                                                          })->columnSpan(1),
+                    ->schema([
+                        Forms\Components\ToggleButtons::make('is_service')
+                            ->label('Product Type')
+                            ->inline()
+                            ->live()
+                            ->required()
+                            ->options([
+                                0 => 'Product',
+                                1 => 'Service',
+                            ])
+                            ->colors([
+                                0 => 'success',
+                                1 => 'warning',
+                            ])
+                            ->icons([
+                                0 => 'heroicon-m-shopping-bag',
+                                1 => 'heroicon-m-wrench-screwdriver',
+                            ])
+                            ->default(0)
+                            ->disabled(fn (
+                                $livewire
+                            ) => $livewire instanceof EditRecord)
+                            ->afterStateUpdated(function (
+                                Get $get,
+                                Set $set
+                            ) {
+                                $set('total_cost_price',
+                                    null);
+                                $set('gst',
+                                    null);
+                                $set('total_cost_price_with_gst',
+                                    null);
+                                $set('cost_price_per_quantity',
+                                    null);
+                                $set('selling_price_per_quantity',
+                                    null);
+                                $set('quantity',
+                                    null);
+                                $set('quantity_threshold',
+                                    null);
+                            })->columnSpan(1),
 
-                                            Forms\Components\Section::make()
-                                                                    ->schema([
-                                                                        Forms\Components\TextInput::make('item_code')
-                                                                                                  ->label(fn(Get $get
-                                                                                                  ) => $get('is_service') ? 'Service Code' : 'Item Code')
-                                                                                                  ->required()
-                                                                                                  ->maxLength(255),
+                        Forms\Components\Section::make()
+                            ->schema([
+                                Forms\Components\TextInput::make('item_code')
+                                    ->label(fn (Get $get
+                                    ) => $get('is_service') ? 'Service Code' : 'Item Code')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->unique(table: StockItem::class,
+                                        column: 'item_code')
+                                    ->validationMessages([
+                                        'unique' => 'This :attribute is already taken.',
+                                    ]),
 
-                                                                        Forms\Components\TextInput::make('product_name')
-                                                                                                  ->label(fn(Get $get
-                                                                                                  ) => $get('is_service') ? 'Service Name' : 'Product Name')
-                                                                                                  ->required()
-                                                                                                  ->maxLength(255),
-
-
-                                                                        Forms\Components\Select::make('vendor_id')
-                                                                                               ->relationship('vendor',
-                                                                                                   'name')
-                                                                                               ->searchable()
-                                                                                               ->required()
-                                                                                               ->label('Vendor')
-                                                                                               ->options(self::getVendors() ?? [])
-                                                                                               ->helperText(empty(self::getVendors()) ? 'No vendors available.' : '')
-                                                                                               ->disabled(empty(self::getVendors()))
-                                                                                               ->visible(fn(Get $get
-                                                                                               ) => ! $get('is_service')),
-
-                                                                    ])
-                                                                    ->columns(2),
-
-                                            Forms\Components\Section::make('Pricing & Stock')
-                                                                    ->schema([
-                                                                        Forms\Components\Grid::make()
-                                                                                             ->schema([
-                                                                                                 Forms\Components\TextInput::make('total_cost_price')
-                                                                                                                           ->label(function (
-                                                                                                                               Get $get
-                                                                                                                           ) {
-                                                                                                                               if ($get('is_service')) {
-                                                                                                                                   return 'Service Price';
-                                                                                                                               }
-
-                                                                                                                               return 'Cost Price';
-                                                                                                                           })
-                                                                                                                           ->numeric()
-                                                                                                                           ->step(0.01)
-                                                                                                                           ->default(0)
-                                                                                                                           ->prefix('MVR')
-                                                                                                                           ->required()
-                                                                                                                           ->rules([
-                                                                                                                               'numeric',
-                                                                                                                               'min:0',
-                                                                                                                           ])
-                                                                                                                           ->live(onBlur: true)
-                                                                                                                           ->afterStateUpdated(fn(
-                                                                                                                               Get $get,
-                                                                                                                               Set $set
-                                                                                                                           ) => self::calculateTotal($get,
-                                                                                                                               $set)),
-
-                                                                                                 Forms\Components\TextInput::make('gst')
-                                                                                                                           ->label('GST')
-                                                                                                                           ->numeric()
-                                                                                                                           ->default(0)
-                                                                                                                           ->rules([
-                                                                                                                               'numeric',
-                                                                                                                               'min:0',
-                                                                                                                           ])
-                                                                                                                           ->step(0.01)
-                                                                                                                           ->prefix('MVR')
-                                                                                                                           ->required()
-                                                                                                                           ->live(onBlur: true)
-                                                                                                                           ->afterStateUpdated(fn(
-                                                                                                                               Get $get,
-                                                                                                                               Set $set
-                                                                                                                           ) => self::calculateTotal($get,
-                                                                                                                               $set)),
-
-                                                                                                 Forms\Components\TextInput::make('total_cost_price_with_gst')
-                                                                                                                           ->label('Total Cost Price')
-                                                                                                                           ->reactive()
-                                                                                                                           ->numeric()
-                                                                                                                           ->default(0)
-                                                                                                                           ->prefix('MVR')
-                                                                                                                           ->readOnly()
-                                                                                                                           ->dehydrated(),
-
-                                                                                                 Forms\Components\TextInput::make('quantity')
-                                                                                                                           ->label('Stock Quantity')
-                                                                                                                           ->numeric()
-                                                                                                                           ->default(0)
-                                                                                                                           ->visible(fn(
-                                                                                                                               Get $get
-                                                                                                                           ) => ! $get('is_service'))
-                                                                                                                           ->required()
-                                                                                                                           ->live(onBlur: true)
-                                                                                                                           ->rules([
-                                                                                                                               'numeric',
-                                                                                                                               'min:0',
-                                                                                                                           ])
-                                                                                                                           ->afterStateUpdated(fn(
-                                                                                                                               Get $get,
-                                                                                                                               Set $set
-                                                                                                                           ) => self::calculateTotal($get,
-                                                                                                                               $set)),
+                                Forms\Components\TextInput::make('product_name')
+                                    ->label(fn (Get $get
+                                    ) => $get('is_service') ? 'Service Name' : 'Product Name')
+                                    ->required()
+                                    ->maxLength(255),
 
 
-                                                                                                 Forms\Components\TextInput::make('cost_price_per_quantity')
-                                                                                                                           ->label('Cost Price Per Quantity')
-                                                                                                                           ->reactive()
-                                                                                                                           ->default(0)
-                                                                                                                           ->numeric()
-                                                                                                                           ->prefix('MVR')
-                                                                                                                           ->readOnly()
-                                                                                                                           ->dehydrated()
-                                                                                                                           ->visible(fn(
-                                                                                                                               Get $get
-                                                                                                                           ) => ! $get('is_service')),
+                                Forms\Components\Select::make('vendor_id')
+                                    ->relationship('vendor',
+                                        'name')
+                                    ->searchable()
+                                    ->required()
+                                    ->label('Vendor')
+                                    ->options(self::getVendors() ?? [])
+                                    ->helperText(empty(self::getVendors()) ? 'No vendors available.' : '')
+                                    ->disabled(empty(self::getVendors()))
+                                    ->visible(fn (Get $get
+                                    ) => ! $get('is_service')),
 
-                                                                                                 Forms\Components\TextInput::make('selling_price_per_quantity')
-                                                                                                                           ->label('Selling Price Per Quantity')
-                                                                                                                           ->numeric()
-                                                                                                                           ->default(0)
-                                                                                                                           ->prefix('MVR')
-                                                                                                                           ->required()
-                                                                                                                           ->visible(fn(
-                                                                                                                               Get $get
-                                                                                                                           ) => ! $get('is_service')),
+                            ])
+                            ->columns(2),
 
-                                                                                                 Forms\Components\TextInput::make('quantity_threshold')
-                                                                                                                           ->label('Quantity Threshold')
-                                                                                                                           ->numeric()
-                                                                                                                           ->default(0)
-                                                                                                                           ->required()
-                                                                                                                           ->live(onBlur: true)
-                                                                                                                           ->columns(4)
-                                                                                                                           ->visible(fn(
-                                                                                                                               Get $get
-                                                                                                                           ) => ! $get('is_service')),
-                                                                                             ])->columns(3),
-                                                                    ]),
-                                        ]),
+                        Forms\Components\Section::make('Pricing & Stock')
+                            ->schema([
+                                Forms\Components\Grid::make()
+                                    ->schema([
+                                        Forms\Components\TextInput::make('total_cost_price')
+                                            ->label(function (
+                                                Get $get
+                                            ) {
+                                                if ($get('is_service')) {
+                                                    return 'Service Price';
+                                                }
+
+                                                return 'Cost Price';
+                                            })
+                                            ->numeric()
+                                            ->step(0.01)
+                                            ->default(0)
+                                            ->prefix('MVR')
+                                            ->required()
+                                            ->rules([
+                                                'numeric',
+                                                'min:0',
+                                            ])
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(fn (
+                                                Get $get,
+                                                Set $set
+                                            ) => self::calculateTotal($get,
+                                                $set)),
+
+                                        Forms\Components\TextInput::make('gst')
+                                            ->label('GST')
+                                            ->numeric()
+                                            ->default(0)
+                                            ->rules([
+                                                'numeric',
+                                                'min:0',
+                                            ])
+                                            ->step(0.01)
+                                            ->prefix('MVR')
+                                            ->required()
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(fn (
+                                                Get $get,
+                                                Set $set
+                                            ) => self::calculateTotal($get,
+                                                $set)),
+
+                                        Forms\Components\TextInput::make('total_cost_price_with_gst')
+                                            ->label('Total Cost Price')
+                                            ->reactive()
+                                            ->numeric()
+                                            ->default(0)
+                                            ->prefix('MVR')
+                                            ->readOnly()
+                                            ->dehydrated(),
+
+                                        Forms\Components\TextInput::make('quantity')
+                                            ->label('Stock Quantity')
+                                            ->numeric()
+                                            ->default(0)
+                                            ->visible(fn (
+                                                Get $get
+                                            ) => ! $get('is_service'))
+                                            ->required()
+                                            ->live(onBlur: true)
+                                            ->rules([
+                                                'numeric',
+                                                'min:0',
+                                            ])
+                                            ->afterStateUpdated(fn (
+                                                Get $get,
+                                                Set $set
+                                            ) => self::calculateTotal($get,
+                                                $set)),
+
+
+                                        Forms\Components\TextInput::make('cost_price_per_quantity')
+                                            ->label('Cost Price Per Quantity')
+                                            ->reactive()
+                                            ->default(0)
+                                            ->numeric()
+                                            ->prefix('MVR')
+                                            ->readOnly()
+                                            ->dehydrated()
+                                            ->visible(fn (
+                                                Get $get
+                                            ) => ! $get('is_service')),
+
+                                        Forms\Components\TextInput::make('selling_price_per_quantity')
+                                            ->label('Selling Price Per Quantity')
+                                            ->numeric()
+                                            ->default(0)
+                                            ->prefix('MVR')
+                                            ->required()
+                                            ->visible(fn (
+                                                Get $get
+                                            ) => ! $get('is_service')),
+
+                                        Forms\Components\TextInput::make('quantity_threshold')
+                                            ->label('Quantity Threshold')
+                                            ->numeric()
+                                            ->default(0)
+                                            ->required()
+                                            ->live(onBlur: true)
+                                            ->columns(4)
+                                            ->visible(fn (
+                                                Get $get
+                                            ) => ! $get('is_service')),
+                                    ])->columns(3),
+                            ]),
+                    ]),
             ]);
     }
 
@@ -369,9 +374,9 @@ class StockItemResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListStockItems::route('/'),
+            'index' => Pages\ListStockItems::route('/'),
             'create' => Pages\CreateStockItem::route('/create'),
-            'edit'   => Pages\EditStockItem::route('/{record}/edit'),
+            'edit' => Pages\EditStockItem::route('/{record}/edit'),
         ];
     }
 }

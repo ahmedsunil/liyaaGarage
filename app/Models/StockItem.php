@@ -23,6 +23,13 @@ class StockItem extends Model
     protected static function boot(): void
     {
         parent::boot();
+
+        static::creating(function (StockItem $stockItem) {
+            if ($stockItem->is_service->value) {
+                $stockItem->stock_status = StockStatus::AVAILABLE->value;
+            }
+        });
+
         static::updating(function ($model) {
             // Check if the 'quantity' attribute is dirty (modified)
             if ($model->isDirty('quantity')) {

@@ -30,7 +30,7 @@ enum StockStatus: string implements HasColor, HasIcon, HasLabel
             self::IN_STOCK => 'success',
             self::LOW_STOCK => 'warning',
             self::OUT_OF_STOCK => 'danger',
-            self::AVAILABLE => 'information',
+            self::AVAILABLE => 'info',
         };
     }
 
@@ -40,7 +40,7 @@ enum StockStatus: string implements HasColor, HasIcon, HasLabel
             self::IN_STOCK => 'heroicon-m-shopping-cart',
             self::LOW_STOCK => 'heroicon-m-arrow-trending-down',
             self::OUT_OF_STOCK => 'heroicon-m-information-circle',
-            self::AVAILABLE => 'heroicon-m-wrench-screwdriver',
+            self::AVAILABLE => 'heroicon-m-wrench',
         };
     }
 }

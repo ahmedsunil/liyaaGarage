@@ -125,6 +125,7 @@ class SaleResource extends Resource
                                             ->default(1)
                                             ->required()
                                             ->reactive()
+                                            ->dehydrated()
                                             ->live('true')
                                             ->disabled(fn (Get $get
                                             ): bool => StockItem::find($get('stock_item_id'))?->is_service->value == '1'
