@@ -60,6 +60,18 @@ class SaleResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    //                    BulkAction::make('print')
+                    //                        ->label('Generate Invoices')
+                    //                        ->icon('heroicon-o-document-text')
+                    //                        ->action(function (Collection $records) {
+                    //                            $pdf = PDF::loadView('pdf.invoice', [
+                    //                                'sales' => $records,
+                    //                            ]);
+                    //
+                    //                            return response()->streamDownload(function () use ($pdf) {
+                    //                                echo $pdf->output();
+                    //                            }, 'invoices.pdf');
+                    //                        }),
                     BulkAction::make('print')
                         ->label('Generate Invoices')
                         ->icon('heroicon-o-document-text')
@@ -68,9 +80,16 @@ class SaleResource extends Resource
                                 'sales' => $records,
                             ]);
 
+                            // Get first sale's customer info for filename
+                            $firstSale = $records->first();
+                            $filename = str_replace(' ', '_', strtolower($firstSale->customer->name))
+                                .'_'
+                                .$firstSale->customer->phone
+                                .'.pdf';
+
                             return response()->streamDownload(function () use ($pdf) {
                                 echo $pdf->output();
-                            }, 'invoices.pdf');
+                            }, $filename);
                         }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
