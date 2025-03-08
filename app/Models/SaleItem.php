@@ -178,6 +178,7 @@ class SaleItem extends Model
         });
     }
 
+
     /**
      * @throws Exception
      */
@@ -190,12 +191,12 @@ class SaleItem extends Model
         }
 
         // Debugging: Log the current stock item details
-//        Log::info('Updating stock status for stock item:', [
-//            'id'                 => $stockItem->id,
-//            'quantity'           => $stockItem->quantity,
-//            'is_service'         => $stockItem->is_service,
-//            'quantity_threshold' => $stockItem->quantity_threshold,
-//        ]);
+        //        Log::info('Updating stock status for stock item:', [
+        //            'id'                 => $stockItem->id,
+        //            'quantity'           => $stockItem->quantity,
+        //            'is_service'         => $stockItem->is_service,
+        //            'quantity_threshold' => $stockItem->quantity_threshold,
+        //        ]);
 
         // Determine the stock status
         if ($stockItem->is_service->value == 1) {
@@ -209,7 +210,7 @@ class SaleItem extends Model
         }
 
         // Debugging: Log the new stock status
-//        Log::info('New stock status:', ['status' => $stockStatus]);
+        //        Log::info('New stock status:', ['status' => $stockStatus]);
 
         // Update the stock status
         $stockItem->stock_status = $stockStatus;
