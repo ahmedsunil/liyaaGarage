@@ -25,11 +25,9 @@ class Sale extends Model
         parent::boot();
 
         static::deleting(function ($sale) {
-            // Restore stock here.
-            foreach ($sale->items as $salesItem) {
-                $stockItem = $salesItem->stockItem;
-                $stockItem->quantity += $salesItem->quantity;
-                $stockItem->save();
+            // Delete each sale item individually to trigger the deleted event
+            foreach ($sale->items as $item) {
+                $item->delete();
             }
         });
     }

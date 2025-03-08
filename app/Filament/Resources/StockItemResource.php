@@ -195,8 +195,13 @@ class StockItemResource extends Resource
                                     ) => $get('is_service') ? 'Service Code' : 'Item Code')
                                     ->required()
                                     ->maxLength(255)
-                                    ->unique(table: StockItem::class,
-                                        column: 'item_code')
+                                    ->unique(
+                                        table: StockItem::class,
+                                        column: 'item_code',
+                                        ignorable: fn (
+                                            $record
+                                        ) => $record
+                                    )
                                     ->validationMessages([
                                         'unique' => 'This :attribute is already taken.',
                                     ]),

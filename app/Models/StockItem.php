@@ -17,27 +17,27 @@ class StockItem extends Model
 
     protected $casts = [
         'stock_status' => StockStatus::class,
-        'is_service'   => ItemType::class,
+        'is_service' => ItemType::class,
     ];
 
-    protected static function boot(): void
-    {
-        parent::boot();
+    //    protected static function boot(): void
+    //    {
+    //        parent::boot();
+    //
+    //        static::creating(function (StockItem $stockItem) {
+    //            if ($stockItem->is_service->value) {
+    //                $stockItem->stock_status = StockStatus::AVAILABLE->value;
+    //            }
+    //        });
 
-        static::creating(function (StockItem $stockItem) {
-            if ($stockItem->is_service->value) {
-                $stockItem->stock_status = StockStatus::AVAILABLE->value;
-            }
-        });
+    //        static::updating(function ($model) {
+    //            // Check if the 'quantity' attribute is dirty (modified)
+    //            if ($model->isDirty('quantity')) {
+    //                dd($model->quantity);
+    //            }
+    //        });
 
-        static::updating(function ($model) {
-            // Check if the 'quantity' attribute is dirty (modified)
-            if ($model->isDirty('quantity')) {
-                dd($model->quantity);
-            }
-        });
-
-    }
+    //    }
 
     public function saleItems(): HasMany
     {
