@@ -204,10 +204,34 @@ class SaleResource extends Resource
                                         //                                                    $get);
                                         //                                            }),
 
+                                        // good version
                                         TextInput::make('quantity')
                                             ->label('Quantity')
                                             ->numeric()
+                                            ->helperText(function (
+                                                Get $get
+                                            ): string {
+                                                $stockItemId = $get('stock_item_id');
+                                                $stockItem = StockItem::find($stockItemId);
+
+                                                if ($stockItem && ! $stockItem->is_service->value == 1) {
+                                                    return 'Available: '.$stockItem->quantity;
+                                                }
+
+                                                return ' ';
+                                            })
                                             ->minValue(1)
+                                            ->maxValue(function (Get $get
+                                            ) {
+                                                $stockItemId = $get('stock_item_id');
+                                                $stockItem = StockItem::find($stockItemId);
+
+                                                if ($stockItem && ! $stockItem->is_service->value == 1) {
+                                                    return $stockItem->quantity;
+                                                }
+
+                                                return null; // No max value for services
+                                            })
                                             ->default(1)
                                             ->required()
                                             ->dehydrated()
@@ -252,6 +276,7 @@ class SaleResource extends Resource
                                                 $set('../../total_amount',
                                                     $subtotal - $discountAmount);
                                             }),
+
 
                                         TextInput::make('unit_price')
                                             ->label('Unit Price')
