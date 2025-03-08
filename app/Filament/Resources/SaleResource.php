@@ -6,6 +6,7 @@ use Exception;
 use Filament\Forms;
 use App\Models\Sale;
 use Filament\Tables;
+use App\Models\Vehicle;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use App\Models\Customer;
@@ -311,6 +312,7 @@ class SaleResource extends Resource
 
                                 Forms\Components\Select::make('customer_id')->label('Customer / Owner')
                                     ->searchable()
+                                    ->relationship('customer')
                                     ->getSearchResultsUsing(fn (
                                         string $search
                                     ): array => Customer::where('name',
@@ -321,14 +323,45 @@ class SaleResource extends Resource
                                                 'id')->toArray())
                                     ->getOptionLabelUsing(fn (
                                         $value
-                                    ): ?string => Customer::find($value)?->name),
+                                    ): ?string => Customer::find($value)?->name)
+                                    ->required()
+                                    ->live()
+                                    ->afterStateUpdated(fn (
+                                        Set $set
+                                    ) => $set('vehicle_id',
+                                        null)),
+                                //
+                                //                                Forms\Components\Select::make('vehicle_id')
+                                //                                    ->label('Vehicle')
+                                //                                    ->relationship('vehicle',
+                                //                                        'vehicle_number')
+                                //                                    ->searchable()
+                                //                                    ->required(),
 
-                                Forms\Components\Select::make('vehicle_id')
+                                //                                                                     Select::make('customer_id')
+                                //                                                                           ->label('Customer / Owner')
+                                //                                                                           ->relationship('customer', 'name')
+                                //                                                                           ->required()
+                                //                                                                           ->live()
+                                //                                                                           ->afterStateUpdated(fn(Set $set
+                                //                                                                           ) => $set('vehicle_id', null)),
+
+                                Select::make('vehicle_id')
                                     ->label('Vehicle')
-                                    ->relationship('vehicle',
-                                        'vehicle_number')
-                                    ->searchable()
-                                    ->required(),
+                                    ->options(function (Get $get) {
+                                        $customerId = $get('customer_id');
+                                        if ($customerId) {
+                                            return Vehicle::where('customer_id',
+                                                $customerId)->pluck('vehicle_number',
+                                                    'id');
+                                        }
+
+                                        return [];
+                                    })
+                                    ->required()
+                                    ->disabled(fn (Get $get
+                                    ): bool => $get('customer_id') === null),
+
 
                                 Forms\Components\Select::make('transaction_type')->label('Transaction Type')
                                     ->options(TransactionType::class)

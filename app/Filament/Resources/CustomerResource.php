@@ -10,6 +10,7 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Filament\Resources\CustomerResource\Pages;
 use App\Filament\Resources\CustomerResource\RelationManagers\SalesRelationManager;
+use App\Filament\Resources\CustomerResource\RelationManagers\VehiclesRelationManager;
 
 class CustomerResource extends Resource
 {
@@ -52,6 +53,7 @@ class CustomerResource extends Resource
     {
         return [
             SalesRelationManager::class,
+            VehiclesRelationManager::class,
         ];
     }
 
@@ -60,7 +62,7 @@ class CustomerResource extends Resource
         return [
             'index' => Pages\ListCustomers::route('/'),
             //            'create' => Pages\CreateCustomer::route('/create'),
-            'edit'  => Pages\EditCustomer::route('/{record}/edit'),
+            'edit' => Pages\EditCustomer::route('/{record}/edit'),
         ];
     }
 }
