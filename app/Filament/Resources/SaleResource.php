@@ -13,11 +13,14 @@ use App\Models\Customer;
 use Filament\Forms\Form;
 use App\Models\StockItem;
 use Filament\Tables\Table;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use App\Support\Enums\TransactionType;
 use Filament\Forms\Components\Repeater;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Database\Eloquent\Collection;
 use App\Filament\Resources\SaleResource\Pages;
 
 class SaleResource extends Resource
@@ -33,8 +36,7 @@ class SaleResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 Tables\Columns\TextColumn::make('vehicle.customer.name')
                     ->searchable()
                     ->sortable(),
@@ -58,6 +60,18 @@ class SaleResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    BulkAction::make('print')
+                        ->label('Generate Invoices')
+                        ->icon('heroicon-o-document-text')
+                        ->action(function (Collection $records) {
+                            $pdf = PDF::loadView('pdf.invoice', [
+                                'sales' => $records,
+                            ]);
+
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, 'invoices.pdf');
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
