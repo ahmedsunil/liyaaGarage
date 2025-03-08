@@ -202,16 +202,19 @@ class StockItemResource extends Resource
                                                                                                   ->required()
                                                                                                   ->maxLength(255),
 
+
                                                                         Forms\Components\Select::make('vendor_id')
-                                                                                               ->relationship('vendor')
+                                                                                               ->relationship('vendor',
+                                                                                                   'name')
                                                                                                ->searchable()
                                                                                                ->required()
                                                                                                ->label('Vendor')
-                                                                                               ->options(self::getVendors() ?: [])
-                                                                                               ->helperText(self::getVendors()->isEmpty() ? 'No vendors available.' : '')
-                                                                                               ->disabled(self::getVendors()->isEmpty())
+                                                                                               ->options(self::getVendors() ?? [])
+                                                                                               ->helperText(empty(self::getVendors()) ? 'No vendors available.' : '')
+                                                                                               ->disabled(empty(self::getVendors()))
                                                                                                ->visible(fn(Get $get
                                                                                                ) => ! $get('is_service')),
+
                                                                     ])
                                                                     ->columns(2),
 
@@ -334,7 +337,6 @@ class StockItemResource extends Resource
     {
         return Vendor::whereNotNull('id')->get()->pluck('name', 'id');
     }
-
 
     protected static function calculateTotal(Get $get, Set $set): void
     {
