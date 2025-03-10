@@ -2,8 +2,7 @@
 
 namespace App\Models;
 
-use Log;
-use Illuminate\Support\Facades\DB;
+use DB;
 use App\Support\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,15 +19,32 @@ class Sale extends Model
     ];
 
 
+    //    protected static function boot(): void
+    //    {
+    //        parent::boot();
+    //
+    //        static::deleting(function ($sale) {
+    //            // Delete each sale item individually to trigger the deleted event
+    //            foreach ($sale->items as $item) {
+    //                $item->delete();
+    //            }
+    //
+    //        });
+    //    }
+
     protected static function boot(): void
     {
         parent::boot();
 
         static::deleting(function ($sale) {
             // Delete each sale item individually to trigger the deleted event
-            foreach ($sale->items as $item) {
-                $item->delete();
-            }
+            DB::transaction(function () use ($sale) {
+                // Delete each sale item individually to trigger the deleted event
+                foreach ($sale->items as $item) {
+                    $item->delete();
+                }
+            });
+
         });
     }
 

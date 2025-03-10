@@ -148,12 +148,6 @@ class ViewSale extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('print')
-                ->label('Print Invoice')
-                ->icon('heroicon-o-printer')
-                ->color('gray')
-                ->action(fn () => $this->dispatch('print-invoice')),
-
             Action::make('download')
                 ->label('Download PDF')
                 ->icon('heroicon-o-document-arrow-down')
