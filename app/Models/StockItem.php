@@ -20,6 +20,17 @@ class StockItem extends Model
         'is_service'   => ItemType::class,
     ];
 
+    /**
+     * Update stock status for all items
+     */
+
+
+    public static function updateAllStockStatuses(): void
+    {
+        StockItem::where('quantity', '<=', 0)->update(['stock_status' => 'out_of_stock']);
+        StockItem::where('quantity', '>', 0)->where('quantity', '<', 10)->update(['stock_status' => 'low_stock']);
+        StockItem::where('quantity', '>=', 10)->update(['stock_status' => 'in_stock']);
+    }
 
     public function saleItems(): HasMany
     {

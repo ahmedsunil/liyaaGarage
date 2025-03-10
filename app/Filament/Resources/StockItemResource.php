@@ -13,6 +13,7 @@ use App\Models\StockItem;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Support\Collection;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -75,6 +76,18 @@ class StockItemResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+            ])
+            ->headerActions([
+                Action::make('reAdjustAllStock')
+                    ->label('Adjust All Stock')
+                    ->icon('heroicon-o-arrow-path')
+                    ->action(function () {
+                        // Call a method that updates all stock statuses
+                        StockItem::updateAllStockStatuses();
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Adjust All Stock')
+                    ->modalDescription('Are you sure you want to re-adjust all stock statuses?'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

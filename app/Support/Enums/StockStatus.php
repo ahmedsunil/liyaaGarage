@@ -28,7 +28,7 @@ enum StockStatus: string implements HasColor, HasIcon, HasLabel
     {
         return match ($this) {
             self::IN_STOCK => 'success',
-            self::LOW_STOCK => 'warning',
+            self::LOW_STOCK => 'danger',
             self::OUT_OF_STOCK => 'danger',
             self::AVAILABLE => 'info',
         };
