@@ -25,9 +25,4 @@ class Customer extends Model
     }
 
 
-    //    public function sales(): hasManyThrough
-    //    {
-    //        return $this->hasManyThrough(Sale::class, Vehicle::class);
-    //    }
-
 }

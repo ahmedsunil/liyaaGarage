@@ -18,20 +18,6 @@ class Sale extends Model
         'transaction_type' => TransactionType::class,
     ];
 
-
-    //    protected static function boot(): void
-    //    {
-    //        parent::boot();
-    //
-    //        static::deleting(function ($sale) {
-    //            // Delete each sale item individually to trigger the deleted event
-    //            foreach ($sale->items as $item) {
-    //                $item->delete();
-    //            }
-    //
-    //        });
-    //    }
-
     protected static function boot(): void
     {
         parent::boot();
@@ -62,10 +48,4 @@ class Sale extends Model
     {
         return $this->belongsTo(Customer::class);
     }
-
-    //    public function customer()
-    //    {
-    //        return $this->vehicle->customer();
-    //    }
-
 }

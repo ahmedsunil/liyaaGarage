@@ -17,21 +17,9 @@ class StockItem extends Model
 
     protected $casts = [
         'stock_status' => StockStatus::class,
-        'is_service' => ItemType::class,
+        'is_service'   => ItemType::class,
     ];
 
-    //    protected static function boot(): void
-    //    {
-    //        parent::boot();
-    //
-    //
-    //
-    //        static::updating(function ($stockItem) {
-    //            $stockItem->updateStockStatus();
-    //            dd($stockItem->quantity);
-    //
-    //        });
-    //    }
 
     public function saleItems(): HasMany
     {
