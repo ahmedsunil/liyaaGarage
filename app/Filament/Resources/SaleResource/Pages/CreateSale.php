@@ -26,17 +26,17 @@ class CreateSale extends CreateRecord
 //        }
 //    }
 
-    protected function afterCreate(): RedirectResponse
-    {
-        if (empty($this->record->items)) {
-            if ($this->record->exists) {
-                // Delete the sale if it already exists
-                $this->record->delete();
-            } else {
-                // Abort the save operation if it's a new sale
-                abort(422, 'Cannot save a sale without items.');
-            }
-        }
-    }
+//    protected function afterCreate(): RedirectResponse
+//    {
+//        if (empty($this->record->items)) {
+//            if ($this->record->exists) {
+//                // Delete the sale if it already exists
+//                $this->record->delete();
+//            } else {
+//                // Abort the save operation if it's a new sale
+//                abort(422, 'Cannot save a sale without items.');
+//            }
+//        }
+//    }
 
 }
