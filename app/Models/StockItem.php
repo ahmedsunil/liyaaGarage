@@ -17,14 +17,12 @@ class StockItem extends Model
 
     protected $casts = [
         'stock_status' => StockStatus::class,
-        'is_service'   => ItemType::class,
+        'is_service' => ItemType::class,
     ];
 
     /**
      * Update stock status for all items
      */
-
-
     public static function updateAllStockStatuses(): void
     {
         StockItem::where('quantity', '<=', 0)->update(['stock_status' => 'out_of_stock']);

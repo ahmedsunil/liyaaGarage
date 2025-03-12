@@ -237,7 +237,6 @@ class StockItemResource extends Resource
                                     ->disabled(empty(self::getVendors()))
                                     ->visible(fn (Get $get
                                     ) => ! $get('is_service')),
-
                             ])
                             ->columns(2),
 

@@ -10,6 +10,7 @@ use Filament\Support\Assets\Css;
 use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\Vite;
+use Filament\Support\Enums\MaxWidth;
 use Filament\Http\Middleware\Authenticate;
 use Filament\FontProviders\GoogleFontProvider;
 use Illuminate\Session\Middleware\StartSession;
@@ -28,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->maxContentWidth('full')
+            ->maxContentWidth(MaxWidth::Full)
             ->brandName(function () {
                 $settings = app(SiteSettings::class) ?? null;
                 if ($settings) {
@@ -61,6 +62,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
             ])
+            ->sidebarCollapsibleOnDesktop()
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

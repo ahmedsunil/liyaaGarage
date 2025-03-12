@@ -235,7 +235,8 @@ class SaleResource extends Resource
                                     ])
                                     ->columns(4)
                                     ->columnSpan(9)
-                                    ->live()
+                                    ->live(onBlur: true)
+                                    ->required()
                                     ->afterStateUpdated(function (
                                         Set $set,
                                         Get $get

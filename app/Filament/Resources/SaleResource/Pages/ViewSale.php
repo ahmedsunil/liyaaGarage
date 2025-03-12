@@ -4,7 +4,6 @@ namespace App\Filament\Resources\SaleResource\Pages;
 
 use Filament\Actions\Action;
 use Filament\Infolists\Infolist;
-use App\Support\Enums\TransactionType;
 use Filament\Support\Enums\FontWeight;
 use Filament\Infolists\Components\Grid;
 use App\Filament\Resources\SaleResource;
@@ -25,114 +24,114 @@ class ViewSale extends ViewRecord
         return $infolist
             ->schema([
                 Section::make()
-                       ->schema([
-                           Split::make([
-                               Group::make([
-                                   TextEntry::make('id')
-                                            ->label('Invoice #')
-                                            ->formatStateUsing(fn($state) => str_pad($state, 6, '0', STR_PAD_LEFT))
-                                            ->weight(FontWeight::Bold)
-                                            ->size(TextEntry\TextEntrySize::Large),
-                                   TextEntry::make('date')
-                                            ->date('F j, Y'),
-                                   TextEntry::make('transaction_type')
-                                            ->badge(),
-                               ]),
-                               Group::make([
-                                   TextEntry::make('vehicle.vehicle_number')
-                                            ->label('Vehicle')
-                                            ->icon('heroicon-o-truck')
-                                            ->iconPosition(IconPosition::Before),
-                                   TextEntry::make('customer.name')
-                                            ->label('Customer')
-                                            ->icon('heroicon-o-user')
-                                            ->iconPosition(IconPosition::Before),
-                               ])->extraAttributes(['class' => 'text-end']),
-                           ])->from('md'),
-                       ]),
+                    ->schema([
+                        Split::make([
+                            Group::make([
+                                TextEntry::make('id')
+                                    ->label('Invoice #')
+                                    ->formatStateUsing(fn ($state) => str_pad($state, 6, '0', STR_PAD_LEFT))
+                                    ->weight(FontWeight::Bold)
+                                    ->size(TextEntry\TextEntrySize::Large),
+                                TextEntry::make('date')
+                                    ->date('F j, Y'),
+                                TextEntry::make('transaction_type')
+                                    ->badge(),
+                            ]),
+                            Group::make([
+                                TextEntry::make('vehicle.vehicle_number')
+                                    ->label('Vehicle')
+                                    ->icon('heroicon-o-truck')
+                                    ->iconPosition(IconPosition::Before),
+                                TextEntry::make('customer.name')
+                                    ->label('Customer')
+                                    ->icon('heroicon-o-user')
+                                    ->iconPosition(IconPosition::Before),
+                            ])->extraAttributes(['class' => 'text-end']),
+                        ])->from('md'),
+                    ]),
 
                 Section::make('Items')
-                       ->schema([
-                           RepeatableEntry::make('items')
-                                          ->schema([
-                                              Grid::make(3)
-                                                  ->schema([
-                                                      TextEntry::make('stockItem.product_name')
-                                                               ->label('Product')
-                                                               ->weight(FontWeight::Medium)
-                                                               ->columnSpan(1),
+                    ->schema([
+                        RepeatableEntry::make('items')
+                            ->schema([
+                                Grid::make(3)
+                                    ->schema([
+                                        TextEntry::make('stockItem.product_name')
+                                            ->label('Product')
+                                            ->weight(FontWeight::Medium)
+                                            ->columnSpan(1),
 
-                                                      Group::make([
-                                                          TextEntry::make('quantity')
-                                                                   ->suffix(fn($record
-                                                                   ) => $record->stockItem->is_liquid ? ' containers' : ''),
+                                        Group::make([
+                                            TextEntry::make('quantity')
+                                                ->suffix(fn ($record
+                                                ) => $record->stockItem->is_liquid ? ' containers' : ''),
 
-                                                          TextEntry::make('volume')
-                                                                   ->label('Volume')
-                                                                   ->suffix('ml')
-                                                                   ->visible(fn($record
-                                                                   ) => $record->stockItem->is_liquid),
-                                                      ])->columnSpan(1),
+                                            TextEntry::make('volume')
+                                                ->label('Volume')
+                                                ->suffix('ml')
+                                                ->visible(fn ($record
+                                                ) => $record->stockItem->is_liquid),
+                                        ])->columnSpan(1),
 
-                                                      Group::make([
-                                                          TextEntry::make('unit_price')
-                                                                   ->label('Unit Price')
-                                                                   ->money('mvr')
-                                                                   ->extraAttributes(['class' => 'text-end']),
+                                        Group::make([
+                                            TextEntry::make('unit_price')
+                                                ->label('Unit Price')
+                                                ->money('mvr')
+                                                ->extraAttributes(['class' => 'text-end']),
 
-                                                          TextEntry::make('total_price')
-                                                                   ->label('Total')
-                                                                   ->money('mvr')
-                                                                   ->weight(FontWeight::Bold)
-                                                                   ->extraAttributes(['class' => 'text-end']),
-                                                      ])->columnSpan(1),
-                                                  ]),
-                                          ])
-                                          ->columnSpanFull(),
-                       ]),
+                                            TextEntry::make('total_price')
+                                                ->label('Total')
+                                                ->money('mvr')
+                                                ->weight(FontWeight::Bold)
+                                                ->extraAttributes(['class' => 'text-end']),
+                                        ])->columnSpan(1),
+                                    ]),
+                            ])
+                            ->columnSpanFull(),
+                    ]),
 
                 Section::make('Summary')
-                       ->schema([
-                           Grid::make(1)
-                               ->schema([
-                                   Split::make([
-                                       TextEntry::make('')
-                                                ->state(''),
-                                       Group::make([
-                                           TextEntry::make('subtotal_amount')
-                                                    ->label('Subtotal')
-                                                    ->money('mvr')
-                                                    ->extraAttributes(['class' => 'text-end']),
+                    ->schema([
+                        Grid::make(1)
+                            ->schema([
+                                Split::make([
+                                    TextEntry::make('')
+                                        ->state(''),
+                                    Group::make([
+                                        TextEntry::make('subtotal_amount')
+                                            ->label('Subtotal')
+                                            ->money('mvr')
+                                            ->extraAttributes(['class' => 'text-end']),
 
-                                           TextEntry::make('discount_percentage')
-                                                    ->label('Discount')
-                                                    ->formatStateUsing(fn(
-                                                        $state,
-                                                        $record
-                                                    ) => "{$state}% (MVR ".number_format($record->discount_amount,
-                                                            2).')')
-                                                    ->extraAttributes(['class' => 'text-end'])
-                                                    ->visible(fn($record) => $record->discount_percentage > 0),
+                                        TextEntry::make('discount_percentage')
+                                            ->label('Discount')
+                                            ->formatStateUsing(fn (
+                                                $state,
+                                                $record
+                                            ) => "{$state}% (MVR ".number_format($record->discount_amount,
+                                                2).')')
+                                            ->extraAttributes(['class' => 'text-end'])
+                                            ->visible(fn ($record) => $record->discount_percentage > 0),
 
-                                           TextEntry::make('total_amount')
-                                                    ->label('Total')
-                                                    ->money('mvr')
-                                                    ->size(TextEntry\TextEntrySize::Large)
-                                                    ->weight(FontWeight::Bold)
-                                                    ->color('primary')
-                                                    ->extraAttributes(['class' => 'text-end']),
-                                       ]),
-                                   ])->from('md'),
-                               ]),
-                       ]),
+                                        TextEntry::make('total_amount')
+                                            ->label('Total')
+                                            ->money('mvr')
+                                            ->size(TextEntry\TextEntrySize::Large)
+                                            ->weight(FontWeight::Bold)
+                                            ->color('primary')
+                                            ->extraAttributes(['class' => 'text-end']),
+                                    ]),
+                                ])->from('md'),
+                            ]),
+                    ]),
 
                 Section::make('Notes')
-                       ->schema([
-                           TextEntry::make('remarks')
-                                    ->columnSpanFull(),
-                       ])
-                       ->collapsible()
-                       ->collapsed(fn($record) => empty($record->remarks)),
+                    ->schema([
+                        TextEntry::make('remarks')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible()
+                    ->collapsed(fn ($record) => empty($record->remarks)),
             ]);
     }
 
@@ -140,10 +139,10 @@ class ViewSale extends ViewRecord
     {
         return [
             Action::make('download')
-                  ->label('Download PDF')
-                  ->icon('heroicon-o-document-arrow-down')
-                  ->color('primary')
-                  ->url(fn() => route('sales.invoice.pdf', ['sale' => $this->record])),
+                ->label('Download PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('primary')
+                ->url(fn () => route('sales.invoice.pdf', ['sale' => $this->record])),
         ];
     }
 }
