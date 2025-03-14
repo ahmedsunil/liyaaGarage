@@ -12,9 +12,10 @@ class CustomerFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'       => $this->faker->name,
-            'email'      => $this->faker->unique()->safeEmail,
-            'phone'      => $this->faker->unique()->randomNumber(9, true),
+            'name' => $this->faker->name,
+            'email' => $this->faker->unique()->safeEmail,
+            'credit' => $this->faker->randomFloat(2, 2000, 9000),
+            'phone' => $this->faker->unique()->randomNumber(9, true),
             'created_at' => now(),
             'updated_at' => now(),
         ];
