@@ -18,8 +18,8 @@ class UnpaidInvoicesStats extends BaseWidget
     {
         $totalUnpaid = Sale::where('transaction_type', 'pending')->sum('total_amount');
         $overdueCount = Sale::where('transaction_type', 'pending')
-                            ->where('created_at', '<', now())
-                            ->count();
+            ->where('created_at', '<', now())
+            ->count();
         $totalSales = Sale::count();
 
 

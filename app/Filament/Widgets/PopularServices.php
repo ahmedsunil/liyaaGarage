@@ -17,8 +17,6 @@ class PopularServices extends BaseWidget
 {
     protected static ?string $heading = 'Most Popular Products/Services';
 
-    //    protected int|string|array $columnSpan = 'full';
-
     public function table(Table $table): Table
     {
         return $table

@@ -4,33 +4,33 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Panel;
-use Spatie\MediaLibrary\HasMedia;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\MediaLibrary\HasMedia;
 use Spatie\Activitylog\LogOptions;
 use App\Support\Enums\UserStatuses;
 use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\HasAvatar;
+use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
-use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\CausesActivity;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements HasMedia, FilamentUser, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasAvatar, HasMedia
 {
+    use CausesActivity;
     use HasApiTokens;
     use HasFactory;
-    use Notifiable;
-    use SoftDeletes;
     use HasRoles;
     use InteractsWithMedia;
     use LogsActivity;
-    use CausesActivity;
+    use Notifiable;
+    use SoftDeletes;
 
     protected $attributes = [
         'status' => UserStatuses::Pending,
@@ -76,7 +76,7 @@ class User extends Authenticatable implements HasMedia, FilamentUser, HasAvatar
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('avatar')
-             ->singleFile();
+            ->singleFile();
     }
 
     public function canAccessPanel(Panel $panel): bool
@@ -93,6 +93,7 @@ class User extends Authenticatable implements HasMedia, FilamentUser, HasAvatar
     {
         return Attribute::get(function () {
             $this->loadMissing('avatarImages');
+
             return $this->avatarImages->first()?->getUrl() ?: asset('images/anonymous-user.png');
         });
     }
@@ -107,7 +108,7 @@ class User extends Authenticatable implements HasMedia, FilamentUser, HasAvatar
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-                         ->logExcept($this->hidden)
-                         ->logAll();
+            ->logExcept($this->hidden)
+            ->logAll();
     }
 }

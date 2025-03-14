@@ -5,14 +5,22 @@ namespace App\Models;
 use DB;
 use Exception;
 use App\Support\Enums\StockStatus;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Notifications\Notification;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class SaleItem extends Model
 {
+    use HasFactory;
+    use LogsActivity;
+
     protected $guarded = [];
+
 
     // with stock status update,
     //    protected static function boot(): void
@@ -105,11 +113,11 @@ class SaleItem extends Model
 
                 // Send notification
                 Notification::make()
-                    ->title('Insufficient Stock')
-                    ->body($errorMessage)
-                    ->danger()
-                    ->persistent()
-                    ->send();
+                            ->title('Insufficient Stock')
+                            ->body($errorMessage)
+                            ->danger()
+                            ->persistent()
+                            ->send();
 
                 // If this SalesItem is being created as part of a new Sale creation
                 // (rather than being added to an existing Sale), we should prevent the
@@ -189,11 +197,11 @@ class SaleItem extends Model
 
                 // Send notification
                 Notification::make()
-                    ->title('Stock Limitation')
-                    ->body($errorMessage)
-                    ->danger()
-                    ->persistent()
-                    ->send();
+                            ->title('Stock Limitation')
+                            ->body($errorMessage)
+                            ->danger()
+                            ->persistent()
+                            ->send();
 
                 // Re-throw to prevent update
                 throw $e;
@@ -245,5 +253,22 @@ class SaleItem extends Model
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+                         ->logExcept($this->hidden)
+                         ->logAll()
+                         ->setDescriptionForEvent(function (string $eventName) {
+                             return "This {$this->formattedName} has been {$eventName}";
+                         });
+    }
+
+    public function formattedName(): Attribute
+    {
+        return Attribute::get(function () {
+            return $this->name;
+        });
     }
 }

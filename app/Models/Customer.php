@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Customer extends Model
 {
     use HasFactory;
+    use LogsActivity;
 
     protected $guarded = [];
 
@@ -24,5 +26,20 @@ class Customer extends Model
         return $this->hasMany(Sale::class);
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+                         ->logExcept($this->hidden)
+                         ->logAll()
+                         ->setDescriptionForEvent(function (string $eventName) {
+                             return "This {$this->formattedName} has been {$eventName}";
+                         });
+    }
 
+    public function formattedName(): Attribute
+    {
+        return Attribute::get(function () {
+            return $this->phone;
+        });
+    }
 }

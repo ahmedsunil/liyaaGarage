@@ -4,7 +4,10 @@ namespace App\Models;
 
 use App\Support\Enums\ItemType;
 use App\Support\Enums\StockStatus;
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,12 +15,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class StockItem extends Model
 {
     use HasFactory;
+    use LogsActivity;
 
     protected $guarded = [];
 
     protected $casts = [
         'stock_status' => StockStatus::class,
-        'is_service' => ItemType::class,
+        'is_service'   => ItemType::class,
     ];
 
     /**
@@ -40,5 +44,19 @@ class StockItem extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+                         ->logExcept($this->hidden)
+                         ->logAll();
+    }
+
+    public function formattedName(): Attribute
+    {
+        return Attribute::get(function () {
+            return $this->product_name;
+        });
     }
 }

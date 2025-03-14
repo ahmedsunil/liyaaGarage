@@ -26,6 +26,7 @@ return new class extends Migration {
             $table->boolean('is_service')->default(false);
             $table->index(['stock_status', 'quantity']);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

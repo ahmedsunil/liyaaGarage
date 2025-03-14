@@ -3,14 +3,19 @@
 namespace App\Models;
 
 use DB;
+use Spatie\Activitylog\LogOptions;
 use App\Support\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Sale extends Model
 {
-    //    public $_tempItems;
+    use HasFactory;
+    use LogsActivity;
 
     protected $guarded = [];
 
@@ -52,5 +57,22 @@ class Sale extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+                         ->logExcept($this->hidden)
+                         ->logAll()
+                         ->setDescriptionForEvent(function (string $eventName) {
+                             return "This {$this->formattedName} has been {$eventName}";
+                         });
+    }
+
+    public function formattedName(): Attribute
+    {
+        return Attribute::get(function () {
+            return $this->id;
+        });
     }
 }

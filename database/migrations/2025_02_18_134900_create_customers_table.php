@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->string('email');
             $table->decimal('credit', 10, 2);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
