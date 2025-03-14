@@ -39,10 +39,10 @@ class Sale extends Model
         return $this->hasMany(SaleItem::class);
     }
 
-//    public function isInvalid(): bool
-//    {
-//        return $this->relationLoaded('items') ? $this->items->isEmpty() : $this->items()->count() === 0;
-//    }
+    //    public function isInvalid(): bool
+    //    {
+    //        return $this->relationLoaded('items') ? $this->items->isEmpty() : $this->items()->count() === 0;
+    //    }
 
     public function vehicle(): BelongsTo
     {
