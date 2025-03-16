@@ -7,10 +7,11 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use App\Settings\SiteSettings;
 use Filament\Support\Assets\Css;
+use Filament\Navigation\MenuItem;
 use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
-use Illuminate\Support\Facades\Vite;
 use Filament\Support\Enums\MaxWidth;
+use Illuminate\Support\Facades\Vite;
 use Filament\Http\Middleware\Authenticate;
 use Filament\FontProviders\GoogleFontProvider;
 use Illuminate\Session\Middleware\StartSession;
@@ -22,6 +23,7 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use App\Filament\Resources\InoviceSettingResource\Pages\EditInvoiceSettings;
 
 class AdminPanelProvider extends PanelProvider
 {
