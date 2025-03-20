@@ -1,9 +1,15 @@
-@php use Carbon\Carbon; @endphp
+@php
+    use Carbon\Carbon;
+    use App\Models\Business;
+
+    $business = Business::first();
+@endphp
     <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Invoice - Liyaa Garage</title>
+
+    <title>Invoice - {{ $business->name }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -118,13 +124,13 @@
         <div class="header">
             <div class="invoice-title">
                 <h1>INVOICE</h1>
-                <p>#{{ str_pad($sale->id, 6, '0', STR_PAD_LEFT) }}</p>
-            </div>
+                <p>#{{ $business->invoice_number_prefix }}/{{ date('Y') }}
+                    /{{ str_pad($sale->id + 1000, 4, '0', STR_PAD_LEFT) }}</p></div>
             <div class="company-info">
-                <h2>Liyaa Garage</h2>
-                <p>R. Hulhudhuffaaru</p>
-                <p>Liyaage</p>
-                <p>7626626</p>
+                <h2>{{ Str::title($business->name) }}</h2>
+                <p>{{ Str::title($business->street_address) }}</p>
+                <p>{{ $business->contact }}</p>
+                <p>{{ $business->email }}</p>
             </div>
         </div>
 
@@ -138,16 +144,17 @@
 
             <div class="info-section">
                 <h3>INVOICE DETAILS</h3>
-                <p><strong>Invoice Number</strong><br>{{ str_pad($sale->id, 6, '0', STR_PAD_LEFT) }}</p>
+                <p><strong>Invoice Number</strong><br>#{{ $business->invoice_number_prefix }}/{{ date('Y') }}
+                    /{{ str_pad($sale->id + 1000, 4, '0', STR_PAD_LEFT) }}</p>
                 <p><strong>Date Issued</strong><br>{{ Carbon::parse($sale->date)->format('M d, Y') }}</p>
                 <p><strong>Payment Status</strong><br>{{ ucfirst($sale->transaction_type->value) }}</p>
             </div>
 
             <div class="info-section">
                 <h3>PAYMENT INFORMATION</h3>
-                <p><strong>Bank</strong><br>BML</p>
-                <p><strong>Account Name</strong><br>Liyaa Garage</p>
-                <p><strong>Account Number</strong><br>7626626</p>
+                <p><strong>Bank</strong><br>{{ Str::upper($business->account_type) }}</p>
+                <p><strong>Account Name</strong><br>{{ $business->account_name }}</p>
+                <p><strong>Account Number</strong><br>{{ $business->account_number }}</p>
             </div>
         </div>
 
@@ -181,10 +188,8 @@
         </div>
 
         <div class="footer">
-            <p>Thank you for your business!</p>
-            <p>If you have any questions about this invoice, please contact us at +960 333 4456 or email at
-                support@liyaagarage.mv</p>
-            <p>© {{ date('Y') }} Liyaa Garage. All rights reserved.</p>
+            <p>{{ $business->footer_text }}</p>
+            <p>© {{ date('Y') }} {{ $business->copyright }}</p>
         </div>
     </div>
     @if(!$loop->last)

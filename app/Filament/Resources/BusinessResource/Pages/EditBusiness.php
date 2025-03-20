@@ -19,13 +19,7 @@ class EditBusiness extends Page implements HasForms
 
     protected static string $resource = BusinessResource::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
     protected static string $view = 'filament.pages.edit-business';
-
-    protected static ?string $title = 'Business Information';
-
-    protected static ?string $navigationGroup = 'Site Management';
 
     public ?array $data = [];
 
@@ -39,6 +33,8 @@ class EditBusiness extends Page implements HasForms
                 'street_address'        => 'Default Business Street Address',
                 'email'                 => 'business@mail.com',
                 'account_number'        => 'Default Business Account Number',
+                'account_type'          => 'Default Business Account Type',
+                'account_name'          => 'Default Business Account Type',
                 'invoice_number_prefix' => 'Default Business Invoice Number Prefix',
                 'footer_text'           => 'Default Business Footer Text',
                 'copyright'             => 'Default Business Copyright',
