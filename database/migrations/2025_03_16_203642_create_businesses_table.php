@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('invoice_settings', function (Blueprint $table) {
+        Schema::create('business', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('contact');
@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->string('invoice_number_prefix');
             $table->string('footer_text');
             $table->string('copyright');
+            $table->string('logo_path');
             $table->timestamps();
         });
     }
