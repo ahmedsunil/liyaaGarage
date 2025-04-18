@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Role;
-use App\Models\User;
 use App\Models\Sale;
+use App\Models\User;
 use App\Models\Asset;
 use App\Models\Vendor;
 use App\Models\Expense;
@@ -16,6 +16,7 @@ use App\Models\Permission;
 use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
 use App\Policies\ActivityPolicy;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Activitylog\Models\Activity;
@@ -27,8 +28,8 @@ class AppServiceProvider extends ServiceProvider
 {
     protected array $policies = [
         Activity::class => ActivityPolicy::class,
-        User::class     => UserPolicy::class,
-        Role::class     => RolePolicy::class,
+        User::class => UserPolicy::class,
+        Role::class => RolePolicy::class,
     ];
 
     public function boot(): void
@@ -42,20 +43,24 @@ class AppServiceProvider extends ServiceProvider
             Gate::policy($model, $policy);
         }
 
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         // enforce morph map
         Relation::enforceMorphMap([
-            'user'       => User::class,
-            'role'       => Role::class,
+            'user' => User::class,
+            'role' => Role::class,
             'permission' => Permission::class,
-            'activity'   => Activity::class,
+            'activity' => Activity::class,
             'stock_item' => StockItem::class,
-            'asset'      => Asset::class,
-            'customer'   => Customer::class,
-            'expense'    => Expense::class,
-            'sale'       => Sale::class,
-            'sale_item'  => SaleItem::class,
-            'vehicle'    => Vehicle::class,
-            'vendor'     => Vendor::class,
+            'asset' => Asset::class,
+            'customer' => Customer::class,
+            'expense' => Expense::class,
+            'sale' => Sale::class,
+            'sale_item' => SaleItem::class,
+            'vehicle' => Vehicle::class,
+            'vendor' => Vendor::class,
         ]);
     }
 

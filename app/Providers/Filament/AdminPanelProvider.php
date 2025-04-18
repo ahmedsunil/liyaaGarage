@@ -5,9 +5,9 @@ namespace App\Providers\Filament;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Sabberworm\CSS\Value\URL;
 use App\Settings\SiteSettings;
 use Filament\Support\Assets\Css;
-use Filament\Navigation\MenuItem;
 use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
@@ -23,12 +23,13 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
-use App\Filament\Resources\InoviceSettingResource\Pages\EditInvoiceSettings;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        //        URL::forceScheme('https');
+
         return $panel
             ->default()
             ->maxContentWidth(MaxWidth::Full)
