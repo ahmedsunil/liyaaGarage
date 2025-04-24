@@ -2,15 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\Business;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-
     public function run(): void
     {
         $this->call([
@@ -20,7 +16,7 @@ class DatabaseSeeder extends Seeder
             CustomerSeeder::class,
             VehicleSeeder::class,
             VendorSeeder::class,
-            Business::class,
+            BusinessSeeder::class,
         ]);
     }
 }

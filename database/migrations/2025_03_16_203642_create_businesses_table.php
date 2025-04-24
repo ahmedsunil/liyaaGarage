@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('copyright');
             $table->string('account_name');
             $table->string('account_type');
-            $table->string('logo_path');
+            $table->string('logo_path')->nullable();
             $table->timestamps();
         });
     }

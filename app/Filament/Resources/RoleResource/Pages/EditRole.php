@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\RoleResource\Pages;
 
 use App\Models\Role;
+use Filament\Actions;
 use App\DataObjects\RoleData;
 use Illuminate\Database\Eloquent\Model;
 use App\Filament\Resources\RoleResource;
-use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
 class EditRole extends EditRecord
@@ -25,7 +25,6 @@ class EditRole extends EditRecord
 
         return $record;
     }
-
 
     protected function getHeaderActions(): array
     {

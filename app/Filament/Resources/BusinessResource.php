@@ -16,11 +16,15 @@ use App\Filament\Resources\BusinessResource\Pages\EditBusiness;
 class BusinessResource extends Resource
 {
     protected static ?string $model = Business::class;
+
     protected static ?string $title = 'Business Information';
+
     protected static ?string $navigationLabel = 'Business Information';
 
+    protected static ?string $navigationGroup = 'Administration & Management';
 
-    protected static ?string $navigationGroup = 'Site Management';
+    protected static ?int $navigationSort = 10;
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     public static function form(Form $form): Form
@@ -37,21 +41,21 @@ class BusinessResource extends Resource
             Grid::make()
                 ->schema([
                     Section::make('Company Information')
-                           ->columnSpan(['lg' => 1])  // Takes one column on large screens
-                           ->schema([
+                        ->columnSpan(['lg' => 1])  // Takes one column on large screens
+                        ->schema([
                             TextInput::make('name')->required(),
                             TextInput::make('street_address')->required(),
                             TextInput::make('contact')->required(),
                             TextInput::make('invoice_number_prefix')->required(),
                             TextInput::make('email')->email()->required(),
                             FileUpload::make('logo_path')
-                                      ->image()
-                                      ->directory('logos'),
+                                ->image()
+                                ->directory('logos'),
                         ]),
 
                     Section::make('Account Details')
-                           ->columnSpan(['lg' => 1])  // Takes one column on large screens
-                           ->schema([
+                        ->columnSpan(['lg' => 1])  // Takes one column on large screens
+                        ->schema([
                             Select::make('account_type')->options([
                                 'bml' => 'BML',
                                 'mib' => 'MIB',
@@ -61,8 +65,8 @@ class BusinessResource extends Resource
                         ]),
 
                     Section::make('Footer Content')
-                           ->columnSpan(['lg' => 1])  // Takes one column on large screens
-                           ->schema([
+                        ->columnSpan(['lg' => 1])  // Takes one column on large screens
+                        ->schema([
                             TextInput::make('footer_text')->required(),
                             TextInput::make('copyright')->required(),
                         ]),

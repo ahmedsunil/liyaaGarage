@@ -14,9 +14,9 @@ class ManageSite extends SettingsPage
 
     protected static string $settings = SiteSettings::class;
 
-    protected static ?string $navigationGroup = 'Site Management';
+    protected static ?string $navigationGroup = 'Administration & Management';
 
-    protected static ?int $navigationSort = 550;
+    protected static ?int $navigationSort = 14;
 
     public static function canAccess(): bool
     {

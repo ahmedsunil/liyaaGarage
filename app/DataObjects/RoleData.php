@@ -5,12 +5,10 @@ namespace App\DataObjects;
 class RoleData
 {
     public function __construct(
-        public string | null $name,
-        public string | null $description,
-        public array | null $permissions = []
-    )
-    {
-    }
+        public string $name,
+        public ?string $description,
+        public array $permissions = []
+    ) {}
 
     public static function fromArray(array $data): self
     {

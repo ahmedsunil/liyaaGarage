@@ -2,14 +2,12 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Section;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -19,9 +17,12 @@ use App\Filament\Resources\UserResource\Tabs\UserPassword;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationGroup = 'User Management';
-    protected static ?int $navigationSort = 405;
+
+    protected static ?string $navigationGroup = 'Administration & Management';
+
+    protected static ?int $navigationSort = 12;
 
     public static function form(Form $form): Form
     {
@@ -43,30 +44,33 @@ class UserResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                                         ->searchable(),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('email')
-                                         ->icon(function ($record) {
-                                             if ($record->email_verified_at) {
-                                                 return 'heroicon-o-check-circle';
-                                             }
-                                             return 'heroicon-o-x-circle';
-                                         })
-                                         ->iconColor(function ($record) {
-                                             return $record->email_verified_at ? 'success' : 'danger';
-                                         })
-                                         ->copyable()
-                                         ->copyMessage('Email address copied')
-                                         ->searchable(),
+                    ->icon(function ($record) {
+                        if ($record->email_verified_at) {
+                            return 'heroicon-o-check-circle';
+                        }
+
+                        return 'heroicon-o-x-circle';
+                    })
+                    ->iconColor(function ($record) {
+                        return $record->email_verified_at ? 'success' : 'danger';
+                    })
+                    ->copyable()
+                    ->copyMessage('Email address copied')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('roles.description')
-                                         ->url(fn(User $record): string => $record->roles->isNotEmpty() ? route('filament.admin.resources.roles.edit', $record->roles?->first()) : "#"),
+                    ->url(fn (User $record
+                    ): string => $record->roles->isNotEmpty() ? route('filament.admin.resources.roles.edit',
+                        $record->roles?->first()) : '#'),
                 Tables\Columns\TextColumn::make('status')
-                                         ->badge()
-                                         ->formatStateUsing(fn(User $record): string => $record->status->getLabel())
-                                         ->color(fn(User $record): string => $record->status->getColor()),
+                    ->badge()
+                    ->formatStateUsing(fn (User $record): string => $record->status->getLabel())
+                    ->color(fn (User $record): string => $record->status->getColor()),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('role')
-                                           ->relationship('roles', 'name'),
+                    ->relationship('roles', 'name'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -90,17 +94,17 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListUsers::route('/'),
+            'index' => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
-            'edit'   => Pages\EditUser::route('/{record}/edit'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-                     ->withoutGlobalScopes([
-                         SoftDeletingScope::class,
-                     ]);
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 }

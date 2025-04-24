@@ -12,11 +12,11 @@ class UserService
 {
     public function updateOrCreate(
         UserData $user_data,
-        User | null $user = null,
-        UserPasswordData $password_data = null
+        ?User $user = null,
+        ?UserPasswordData $password_data = null
     ): User {
         if (! $user) {
-            $user = new User();
+            $user = new User;
         }
 
         $user->name = $user_data->name;
@@ -33,7 +33,9 @@ class UserService
         }
 
         $user->save();
+
         $this->assignRole($user, $user_data);
+
         return $user;
     }
 
@@ -52,6 +54,7 @@ class UserService
         $has_permission = auth()->user()->can('approveAny', User::class);
         if ($has_permission && $user_data->role) {
             $user->assignRole($user_data->role);
+
             return;
         }
 

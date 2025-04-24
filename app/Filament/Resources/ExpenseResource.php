@@ -20,6 +20,10 @@ class ExpenseResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
+    protected static ?string $navigationGroup = 'Core Business Operations';
+
+    protected static ?int $navigationSort = 6;
+
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -43,11 +47,18 @@ class ExpenseResource extends Resource
                                     'card' => 'Card',
                                 ]),
                             Forms\Components\Select::make('vendor_id')
-                                ->relationship('vendors')
+                                ->relationship('vendors', 'name')
                                 ->searchable()
+                                ->preload()
                                 ->label('Vendor')
-                                ->options(Vendor::pluck('name',
-                                    'id'))  // Key-value pairs where key is the ID
+                                ->createOptionForm([
+                                    Forms\Components\TextInput::make('name')->label('Name'),
+                                    Forms\Components\TextInput::make('address')->label('Address'),
+                                    Forms\Components\TextInput::make('phone')->label('Phone Number')->numeric(),
+                                    Forms\Components\TextInput::make('email')->label('Email')->email(),
+                                ])
+//                                ->options(Vendor::pluck('name',
+//                                    'id'))  // Key-value pairs where key is the ID
                                 ->required(),
                             Forms\Components\TextInput::make('invoice_number'),
                             Forms\Components\Select::make('category')

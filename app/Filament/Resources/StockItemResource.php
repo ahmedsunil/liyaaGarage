@@ -29,6 +29,10 @@ class StockItemResource extends Resource
 
     protected static ?string $label = 'Product / Service';
 
+    protected static ?string $navigationGroup = 'Core Business Operations';
+
+    protected static ?int $navigationSort = 5;
+
     /**
      * @throws Exception
      */
@@ -231,12 +235,19 @@ class StockItemResource extends Resource
                                         'name')
                                     ->searchable()
                                     ->required()
+                                    ->preload()
                                     ->label('Vendor')
-                                    ->options(self::getVendors() ?? [])
+//                                    ->options(self::getVendors() ?? [])
                                     ->helperText(empty(self::getVendors()) ? 'No vendors available.' : '')
                                     ->disabled(empty(self::getVendors()))
                                     ->visible(fn (Get $get
-                                    ) => ! $get('is_service')),
+                                    ) => ! $get('is_service'))
+                                    ->createOptionForm([
+                                        Forms\Components\TextInput::make('name')->label('Name'),
+                                        Forms\Components\TextInput::make('address')->label('Address'),
+                                        Forms\Components\TextInput::make('phone')->label('Phone Number')->numeric(),
+                                        Forms\Components\TextInput::make('email')->label('Email')->email(),
+                                    ]),
                             ])
                             ->columns(2),
 

@@ -18,23 +18,27 @@ class AssetResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
 
+    protected static ?string $navigationGroup = 'Resources & Infrastructure';
+
+    protected static ?int $navigationSort = 9;
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\Section::make()
-                                        ->schema([
-                                            Forms\Components\TextInput::make('name'),
-                                            Forms\Components\Select::make('type')->options([
-                                                'tools'      => 'Tools',
-                                                'equipments' => 'Equipments',
-                                                'others'     => 'Others',
-                                            ]),
-                                            Forms\Components\DatePicker::make('purchased_date'),
-                                            Forms\Components\TextInput::make('purchased_price'),
-                                            Forms\Components\Textarea::make('description'),
-                                            Forms\Components\Select::make('status')->options(AssetStatuses::class),
-                                        ]),
+                    ->schema([
+                        Forms\Components\TextInput::make('name'),
+                        Forms\Components\Select::make('type')->options([
+                            'tools' => 'Tools',
+                            'equipments' => 'Equipments',
+                            'others' => 'Others',
+                        ]),
+                        Forms\Components\DatePicker::make('purchased_date'),
+                        Forms\Components\TextInput::make('purchased_price'),
+                        Forms\Components\Textarea::make('description'),
+                        Forms\Components\Select::make('status')->options(AssetStatuses::class),
+                    ]),
             ]);
     }
 
@@ -75,8 +79,8 @@ class AssetResource extends Resource
     {
         return [
             'index' => Pages\ListAssets::route('/'),
-//            'create' => Pages\CreateAsset::route('/create'),
-//            'edit'   => Pages\EditAsset::route('/{record}/edit'),
+            //            'create' => Pages\CreateAsset::route('/create'),
+            //            'edit'   => Pages\EditAsset::route('/{record}/edit'),
         ];
     }
 }

@@ -2,32 +2,34 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
+use Str;
 use Filament\Tables;
-use App\Models\Vendor;
+use App\Models\Brand;
+use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use App\Filament\Resources\VendorResource\Pages;
+use Filament\Forms\Components\TextInput;
+use App\Filament\Resources\BrandResource\Pages;
 
-class VendorResource extends Resource
+class BrandResource extends Resource
 {
-    protected static ?string $model = Vendor::class;
+    protected static ?string $model = Brand::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-light-bulb';
+    protected static ?string $navigationIcon = 'heroicon-o-globe-americas';
 
     protected static ?string $navigationGroup = 'Resources & Infrastructure';
 
-    protected static ?int $navigationSort = 8;
+    protected static ?int $navigationSort = 7;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')->label('Name'),
-                Forms\Components\TextInput::make('address')->label('Address'),
-                Forms\Components\TextInput::make('phone')->label('Phone Number')->numeric(),
-                Forms\Components\TextInput::make('email')->label('Email')->email(),
+                TextInput::make('name')->label('Name')->live(onBlur: true)
+                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state))),
+                TextInput::make('slug')->label('Slug')->unique('brands', 'slug',
+                    ignoreRecord: true)->required()->maxLength(255)->readOnly(),
             ]);
     }
 
@@ -36,9 +38,7 @@ class VendorResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('Name'),
-                Tables\Columns\TextColumn::make('address')->label('Address'),
-                Tables\Columns\TextColumn::make('phone')->label('Phone Number'),
-                Tables\Columns\TextColumn::make('email')->label('Email'),
+                Tables\Columns\TextColumn::make('slug')->label('Slug'),
             ])
             ->filters([
                 //
@@ -63,9 +63,7 @@ class VendorResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListVendors::route('/'),
-            //            'create' => Pages\CreateVendor::route('/create'),
-            //            'edit'   => Pages\EditVendor::route('/{record}/edit'),
+            'index' => Pages\ListBrands::route('/'),
         ];
     }
 }

@@ -2,20 +2,18 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Forms;
 use App\Models\Role;
+use Filament\Tables;
+use Filament\Forms\Form;
+use App\Models\Permission;
+use Filament\Tables\Table;
+use Filament\Resources\Resource;
 use Filament\Forms\Components\Section;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Permission;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\RoleResource\Pages;
 use App\Filament\Components\Forms\PermissionSelector;
-use App\Filament\Resources\RoleResource\RelationManagers;
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RoleResource extends Resource
 {
@@ -23,41 +21,46 @@ class RoleResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-check-badge';
 
-    protected static ?string $navigationGroup = 'User Management';
+    protected static ?string $navigationGroup = 'Administration & Management';
 
-    protected static ?int $navigationSort = 410;
+    protected static ?int $navigationSort = 13;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Section::make()
-                       ->schema([
+                    ->schema([
 
-                           Forms\Components\TextInput::make('name')
-                                                     ->unique('roles', 'name', ignoreRecord: true)
-                                                     ->required()
-                                                     ->maxLength(255),
-                           Forms\Components\TextInput::make('description')
-                                                     ->maxLength(255),
-                           PermissionSelector::make('permissions')
-                               ->selectedOptions(fn(Role $role) => $role->permissions->pluck('id')->toArray())
-                               ->options(function () {
-                                   return Permission::getPermissionModels();
-                               }),
-//                           Forms\Components\CheckboxList::make('permissions')
-//                                                        ->relationship(
-//                                                            name: 'permissions',
-//                                                            titleAttribute: 'name',
-//                                                            modifyQueryUsing: fn(Builder $query) => $query->orderBy('model', 'ASC')
-//                                                        )
-//                                                        ->getOptionLabelFromRecordUsing(fn(Model $record) => str($record->name)->title())
-//                                                        ->gridDirection('row')
-//                                                        ->columns(2)
-//                                                        ->bulkToggleable()
-//                                                        ->searchable(),
-                       ])
-                       ->columns(1),
+                        Forms\Components\TextInput::make('name')
+                            ->unique('roles', 'name', ignoreRecord: true)
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('description')
+                            ->maxLength(255),
+                        PermissionSelector::make('permissions')
+                            ->selectedOptions(fn (Role $role
+                            ) => $role->permissions->pluck('id')->toArray())
+                            ->options(function () {
+
+                                return Permission::getPermissionModels();
+                            }),
+
+                        //                        Forms\Components\CheckboxList::make('permissions')
+                        //                            ->relationship(
+                        //                                name: 'permissions',
+                        //                                titleAttribute: 'name',
+                        //                                modifyQueryUsing: fn (Builder $query
+                        //                                ) => $query->orderBy('model', 'ASC')
+                        //                            )
+                        //                            ->getOptionLabelFromRecordUsing(fn (Model $record
+                        //                            ) => str($record->name)->title())
+                        //                            ->gridDirection('row')
+                        //                            ->columns(4)
+                        //                            ->bulkToggleable()
+                        //                            ->searchable(),
+                    ])
+                    ->columns(1),
             ]);
     }
 
@@ -93,9 +96,9 @@ class RoleResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListRoles::route('/'),
+            'index' => Pages\ListRoles::route('/'),
             'create' => Pages\CreateRole::route('/create'),
-            'edit'   => Pages\EditRole::route('/{record}/edit'),
+            'edit' => Pages\EditRole::route('/{record}/edit'),
         ];
     }
 }

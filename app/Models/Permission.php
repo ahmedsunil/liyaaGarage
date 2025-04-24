@@ -2,14 +2,10 @@
 
 namespace App\Models;
 
-
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Models\Permission as SpatiePermission;
 
 class Permission extends SpatiePermission
 {
-
     public static function getPermissionModels()
     {
         $query = self::query()->get()->groupBy('model')->sort()->map(function ($permissions, $model) {
@@ -26,5 +22,4 @@ class Permission extends SpatiePermission
 
         return $query;
     }
-
 }
