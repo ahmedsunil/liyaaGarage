@@ -32,9 +32,11 @@ class VehicleResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('vehicle_type')
                             ->options([
-                                'motocycle' => 'Motocycle',
+                                'motorcycle' => 'Motorcycle',
                                 'scooter' => 'Scooter',
-                                'bicycle' => 'Bicycle',
+                                'bicycle_16' => 'Bicycle 16 Inch',
+                                'bicycle_20' => 'Bicycle 20 Inch',
+                                'bicycle_24' => 'Bicycle 24 Inch',
                                 'car' => 'Car',
                                 'tricycle' => 'Tricycle',
                                 'island_pickup' => 'Island Pickup',
@@ -42,7 +44,8 @@ class VehicleResource extends Resource
                                 'buggy' => 'Buggy',
                                 'wheel_barrow' => 'Wheel Barrow',
                             ])->label('Vehicle Type'),
-                        Forms\Components\Select::make('brand')
+
+                        Forms\Components\Select::make('brand_id')
                             ->relationship('brand', 'name')
                             ->createOptionForm([
                                 TextInput::make('name')->label('Name')->live(onBlur: true)
@@ -56,9 +59,13 @@ class VehicleResource extends Resource
                             ]),
 
                         Forms\Components\TextInput::make('year_of_manufacture')->label('Year of Manufacture')->placeholder('2019'),
+
                         Forms\Components\TextInput::make('engine_number')->placeholder('Example: PJ12345U123456P'),
+
                         Forms\Components\TextInput::make('chassis_number')->placeholder('Example: 1HGCM82633A123456'),
+
                         Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930'),
+
                         Forms\Components\Select::make('customer_id')->label('Customer / Owner')
                             ->searchable()
                             ->getSearchResultsUsing(fn (string $search
@@ -79,7 +86,7 @@ class VehicleResource extends Resource
                 Tables\Columns\TextColumn::make('vehicle_type')->formatStateUsing(function ($state) {
                     return Str::title($state);
                 }),
-                Tables\Columns\TextColumn::make('brand')->formatStateUsing(function ($state) {
+                Tables\Columns\TextColumn::make('brand.name')->formatStateUsing(function ($state) {
                     return Str::title($state);
                 }),
                 Tables\Columns\TextColumn::make('vehicle_number'),

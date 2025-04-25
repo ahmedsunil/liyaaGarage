@@ -290,7 +290,7 @@ class StockItemResource extends Resource
                                                 'min:0',
                                             ])
                                             ->step(0.01)
-                                            ->prefix('MVR')
+                                            ->prefix('%')
                                             ->required()
                                             ->live(onBlur: true)
                                             ->afterStateUpdated(fn (
@@ -380,8 +380,9 @@ class StockItemResource extends Resource
 
         $isService = boolval($get('is_service'));
 
+        $gst_value = ($gst / 100) * $cost_price;
         // Calculate total
-        $total_cost_price = $cost_price + $gst;
+        $total_cost_price = $cost_price + $gst_value;
 
         $set('total_cost_price_with_gst', $total_cost_price);
 

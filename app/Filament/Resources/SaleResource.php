@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Str;
 use Exception;
 use Filament\Forms;
 use App\Models\Sale;
@@ -267,6 +268,11 @@ class SaleResource extends Resource
                                     ): ?string => Customer::find($value)?->name)
                                     ->required()
                                     ->live()
+                                    ->createOptionForm([
+                                        Forms\Components\TextInput::make('name'),
+                                        Forms\Components\TextInput::make('phone'),
+                                        Forms\Components\TextInput::make('email'),
+                                    ])
                                     ->afterStateUpdated(fn (
                                         Set $set
                                     ) => $set('vehicle_id',
@@ -275,6 +281,7 @@ class SaleResource extends Resource
 
                                 Select::make('vehicle_id')
                                     ->label('Vehicle')
+                                    ->relationship('vehicle')
                                     ->options(function (Get $get) {
                                         $customerId = $get('customer_id');
                                         if ($customerId) {
@@ -286,6 +293,53 @@ class SaleResource extends Resource
                                         return [];
                                     })
                                     ->required()
+                                    ->createOptionForm([
+                                        Forms\Components\Select::make('vehicle_type')
+                                            ->options([
+                                                'motocycle' => 'Motocycle',
+                                                'scooter' => 'Scooter',
+                                                'bicycle' => 'Bicycle',
+                                                'car' => 'Car',
+                                                'tricycle' => 'Tricycle',
+                                                'island_pickup' => 'Island Pickup',
+                                                'pickup' => 'Pickup',
+                                                'buggy' => 'Buggy',
+                                                'wheel_barrow' => 'Wheel Barrow',
+                                            ])->label('Vehicle Type'),
+                                        Forms\Components\Select::make('brand_id')
+                                            ->relationship('brand',
+                                                'name')
+                                            ->createOptionForm([
+                                                TextInput::make('name')->label('Name')->live(onBlur: true)
+                                                    ->afterStateUpdated(fn (
+                                                        Set $set,
+                                                        ?string $state
+                                                    ) => $set('slug',
+                                                        Str::slug($state))),
+                                                TextInput::make('slug')->label('Slug')->unique('brands',
+                                                    'slug',
+                                                    ignoreRecord: true)->required()->maxLength(255)->readOnly(),
+                                            ]),
+
+                                        Forms\Components\TextInput::make('year_of_manufacture')->label('Year of Manufacture')->placeholder('2019'),
+                                        Forms\Components\TextInput::make('engine_number')->placeholder('Example: PJ12345U123456P'),
+                                        Forms\Components\TextInput::make('chassis_number')->placeholder('Example: 1HGCM82633A123456'),
+                                        Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930'),
+                                        Forms\Components\Select::make('customer_id')->label('Customer / Owner')
+                                            ->searchable()
+                                            ->getSearchResultsUsing(fn (
+                                                string $search
+                                            ): array => Customer::where('name',
+                                                'like',
+                                                "%{$search}%")->orWhere('phone',
+                                                    'like',
+                                                    "%{$search}%")->limit(50)->pluck('name',
+                                                        'id')->toArray())
+                                            ->getOptionLabelUsing(fn (
+                                                $value
+                                            ): ?string => Customer::find($value)?->name),
+
+                                    ])
                                     ->disabled(fn (Get $get
                                     ): bool => $get('customer_id') === null),
 

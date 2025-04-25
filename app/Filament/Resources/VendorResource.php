@@ -27,7 +27,7 @@ class VendorResource extends Resource
                 Forms\Components\TextInput::make('name')->label('Name'),
                 Forms\Components\TextInput::make('address')->label('Address'),
                 Forms\Components\TextInput::make('phone')->label('Phone Number')->numeric(),
-                Forms\Components\TextInput::make('email')->label('Email')->email(),
+                Forms\Components\TextInput::make('email')->label('Email'),
             ]);
     }
 
@@ -41,7 +41,7 @@ class VendorResource extends Resource
                 Tables\Columns\TextColumn::make('email')->label('Email'),
             ])
             ->filters([
-                //
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

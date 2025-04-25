@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->integer('phone');
             $table->string('email')->nullable();
-            $table->decimal('credit', 10, 2)->nullable();
+            $table->decimal('credit', 10, 2)->nullable()->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

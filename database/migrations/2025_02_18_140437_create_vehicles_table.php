@@ -1,10 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -13,7 +14,7 @@ return new class extends Migration {
         Schema::create('vehicles', function (Blueprint $table) {
             $table->id();
             $table->string('vehicle_type');
-            $table->string('brand');
+            $table->foreignId('brand_id')->constrained()->cascadeOnDelete();
             $table->string('year_of_manufacture');
             $table->string('engine_number');
             $table->string('chassis_number');
