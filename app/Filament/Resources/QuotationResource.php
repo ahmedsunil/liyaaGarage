@@ -12,14 +12,17 @@ use Filament\Forms\Form;
 use App\Models\Quotation;
 use App\Models\StockItem;
 use Filament\Tables\Table;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use App\Support\Enums\TransactionType;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
+use Illuminate\Database\Eloquent\Collection;
 use App\Filament\Resources\QoutationResource\Pages;
 
 class QuotationResource extends Resource
@@ -38,7 +41,7 @@ class QuotationResource extends Resource
             ->schema([
                 Grid::make(12)
                     ->schema([
-                        Section::make('Sale')
+                        Section::make('Quotation Items')
                             ->schema([
                                 Repeater::make('quotationItems')
                                     ->relationship('quotationItems')
@@ -83,7 +86,7 @@ class QuotationResource extends Resource
                                                 $set('total_price', $total);
 
                                                 // Update overall totals using array instead of collection
-                                                $items = $get('../../items') ?? [];
+                                                $items = $get('../../quotationItems') ?? [];
                                                 foreach ($items as &$item) {
                                                     if ($item['stock_item_id'] === $state) {
                                                         $item['total_price'] = $total;
@@ -143,7 +146,7 @@ class QuotationResource extends Resource
                                                     $total);
 
                                                 // Update overall totals
-                                                $items = $get('../../items') ?? [];
+                                                $items = $get('../../quotationItems') ?? [];
                                                 $currentState = $get('stock_item_id');
 
                                                 foreach ($items as &$item) {
@@ -193,7 +196,7 @@ class QuotationResource extends Resource
                                     }),
                             ])->columnSpan(9),
 
-                        Section::make('Sale Details')
+                        Section::make('Quotation Details')
                             ->schema([
                                 DatePicker::make('date')
                                     ->required()
@@ -290,13 +293,6 @@ class QuotationResource extends Resource
                                     ->disabled(fn (Get $get
                                     ): bool => $get('customer_id') === null),
 
-
-                                Select::make('transaction_type')->label('Transaction Type')
-                                    ->options(TransactionType::class)
-                                    ->default(TransactionType::PENDING)
-                                    ->required()
-                                    ->reactive(),
-
                                 TextInput::make('subtotal_amount')
                                     ->label('Subtotal')
                                     ->prefix('MVR')
@@ -333,20 +329,71 @@ class QuotationResource extends Resource
             ]);
     }
 
+    protected static function calculateTotals(Set $set, Get $get): void
+    {
+        $subtotal = collect($get('quotationItems'))->sum(function ($item) {
+            if (empty($item['stock_item_id'])) {
+                return 0;
+            }
+
+            return floatval($item['total_price'] ?? 0);
+        });
+
+        $discountPercentage = floatval($get('discount_percentage') ?? 0);
+        $discountAmount = round(($subtotal * $discountPercentage) / 100, 2);
+
+        $set('subtotal_amount', round($subtotal, 2));
+        $set('discount_amount', $discountAmount);
+        $set('total_amount', round($subtotal - $discountAmount, 2));
+    }
+
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
+                Tables\Columns\TextColumn::make('vehicle.customer.name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('vehicle.vehicle_number')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('transaction_type')->label('Transaction Type')->badge(),
+
+                Tables\Columns\TextColumn::make('total_amount')
+                    ->money('mvr')
+                    ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('transaction_type')
+                    ->options(TransactionType::class),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    BulkAction::make('print')
+                        ->label('Generate Quotations')
+                        ->icon('heroicon-o-document-text')
+                        ->action(function (Collection $records) {
+                            $pdf = PDF::loadView('pdf.quotation', [
+                                'quotations' => $records,
+                            ]);
+
+                            // Get first sale's customer info for filename
+                            $firstSale = $records->first();
+                            $filename = str_replace(' ', '_', strtolower($firstSale->customer->name))
+                                .'_'
+                                .$firstSale->customer->phone
+                                .'.pdf';
+
+                            return response()->streamDownload(function () use ($pdf) {
+                                echo $pdf->output();
+                            }, $filename);
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);

@@ -4,7 +4,7 @@
 
     $business = Business::first();
 
-        $logoPath = storage_path('app/public/' . $business->logo_path);
+    $logoPath = storage_path('app/public/' . $business->logo_path);
 $logoData = base64_encode(file_get_contents($logoPath));
 @endphp
     <!DOCTYPE html>
@@ -12,7 +12,7 @@ $logoData = base64_encode(file_get_contents($logoPath));
 <head>
     <meta charset="UTF-8">
 
-    <title>Invoice - {{ $business->name }}</title>
+    <title>Quotation - {{ $business->name }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -122,13 +122,13 @@ $logoData = base64_encode(file_get_contents($logoPath));
     </style>
 </head>
 <body>
-@foreach($sales as $sale)
+@foreach($quotations as $quotation)
     <div class="invoice-container">
         <div class="header">
             <div class="invoice-title">
-                <h1>INVOICE</h1>
-                <p>#{{ $business->invoice_number_prefix }}/{{ date('Y') }}
-                    /{{ str_pad($sale->id + 1000, 4, '0', STR_PAD_LEFT) }}</p></div>
+                <h1>QUOTATION</h1>
+                <p>#QTN/{{ date('Y') }}
+                    /{{ str_pad($quotation->id + 1000, 4, '0', STR_PAD_LEFT) }}</p></div>
             <div class="company-info">
                 <img src="data:image/jpeg;base64,{{ $logoData }}" width="50" alt="Logo">
                 <h2>{{ Str::title($business->name) }}</h2>
@@ -141,17 +141,16 @@ $logoData = base64_encode(file_get_contents($logoPath));
         <div class="info-container">
             <div class="info-section">
                 <h3>BILL TO</h3>
-                <p><strong>Customer Name</strong><br>{{ $sale->customer->name }}</p>
-                <p><strong>Vehicle</strong><br>{{ $sale->vehicle->number }}</p>
-                <p><strong>Phone</strong><br>{{ $sale->customer->phone }}</p>
+                <p><strong>Customer Name</strong><br>{{ $quotation->customer->name }}</p>
+                <p><strong>Vehicle</strong><br>{{ $quotation->vehicle->number }}</p>
+                <p><strong>Phone</strong><br>{{ $quotation->customer->phone }}</p>
             </div>
 
             <div class="info-section">
-                <h3>INVOICE DETAILS</h3>
-                <p><strong>Invoice Number</strong><br>#{{ $business->invoice_number_prefix }}/{{ date('Y') }}
-                    /{{ str_pad($sale->id + 1000, 4, '0', STR_PAD_LEFT) }}</p>
-                <p><strong>Date Issued</strong><br>{{ Carbon::parse($sale->date)->format('M d, Y') }}</p>
-                <p><strong>Payment Status</strong><br>{{ ucfirst($sale->transaction_type->value) }}</p>
+                <h3>QUOTATION DETAILS</h3>
+                <p><strong>Quotation Number</strong><br>#QTN/{{ date('Y') }}
+                    /{{ str_pad($quotation->id + 1000, 4, '0', STR_PAD_LEFT) }}</p>
+                <p><strong>Date Issued</strong><br>{{ Carbon::parse($quotation->date)->format('M d, Y') }}</p>
             </div>
 
             <div class="info-section">
@@ -172,7 +171,7 @@ $logoData = base64_encode(file_get_contents($logoPath));
             </tr>
             </thead>
             <tbody>
-            @foreach($sale->items as $item)
+            @foreach($quotation->quotationItems as $item)
                 <tr>
                     <td>{{ $item->stockItem->product_name }}</td>
                     <td>{{ $item->quantity }}</td>
@@ -184,11 +183,12 @@ $logoData = base64_encode(file_get_contents($logoPath));
         </table>
 
         <div class="total-section">
-            @if($sale->discount_amount > 0)
-                <p>Subtotal: MVR {{ number_format($sale->subtotal_amount, 2) }}</p>
-                <p>Discount ({{ $sale->discount_percentage }}%): MVR {{ number_format($sale->discount_amount, 2) }}</p>
+            @if($quotation->discount_amount > 0)
+                <p>Subtotal: MVR {{ number_format($quotation->subtotal_amount, 2) }}</p>
+                <p>Discount ({{ $quotation->discount_percentage }}%):
+                    MVR {{ number_format($quotation->discount_amount, 2) }}</p>
             @endif
-            <h2>Total: MVR {{ number_format($sale->total_amount, 2) }}</h2>
+            <h2>Total: MVR {{ number_format($quotation->total_amount, 2) }}</h2>
         </div>
 
         <div class="footer">

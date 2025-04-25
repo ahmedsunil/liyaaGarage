@@ -27,6 +27,11 @@ class Vehicle extends Model
         return $this->hasMany(Sale::class);
     }
 
+    public function quotations(): hasMany
+    {
+        return $this->hasMany(Quotation::class);
+    }
+
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);

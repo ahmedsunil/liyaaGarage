@@ -11,3 +11,7 @@ Route::get('/', function () {
 Route::get('/sales/{sale}/invoice/pdf', [InvoiceController::class, 'downloadPdf'])
     ->name('sales.invoice.pdf')
     ->middleware(['auth']);
+
+Route::get('/quotations/{quotation}/quotation/pdf', [InvoiceController::class, 'downloadPdf'])
+    ->name('quotations.pdf')
+    ->middleware(['auth']);

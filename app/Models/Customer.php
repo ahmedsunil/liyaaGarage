@@ -26,14 +26,19 @@ class Customer extends Model
         return $this->hasMany(Sale::class);
     }
 
+    public function quotations(): Customer|HasMany
+    {
+        return $this->hasMany(Quotation::class);
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-                         ->logExcept($this->hidden)
-                         ->logAll()
-                         ->setDescriptionForEvent(function (string $eventName) {
-                             return "This {$this->formattedName} has been {$eventName}";
-                         });
+            ->logExcept($this->hidden)
+            ->logAll()
+            ->setDescriptionForEvent(function (string $eventName) {
+                return "This {$this->formattedName} has been {$eventName}";
+            });
     }
 
     public function formattedName(): Attribute
