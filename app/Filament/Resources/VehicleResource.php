@@ -10,6 +10,7 @@ use Filament\Forms\Set;
 use App\Models\Customer;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Validation\Rule;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\TextInput;
 use App\Filament\Resources\VehicleResource\Pages;
@@ -30,20 +31,34 @@ class VehicleResource extends Resource
             ->schema([
                 Forms\Components\Section::make()
                     ->schema([
-                        Forms\Components\Select::make('vehicle_type')
-                            ->options([
-                                'motorcycle' => 'Motorcycle',
-                                'scooter' => 'Scooter',
-                                'bicycle_16' => 'Bicycle 16 Inch',
-                                'bicycle_20' => 'Bicycle 20 Inch',
-                                'bicycle_24' => 'Bicycle 24 Inch',
-                                'car' => 'Car',
-                                'tricycle' => 'Tricycle',
-                                'island_pickup' => 'Island Pickup',
-                                'pickup' => 'Pickup',
-                                'buggy' => 'Buggy',
-                                'wheel_barrow' => 'Wheel Barrow',
-                            ])->label('Vehicle Type'),
+                        Forms\Components\Select::make('vehicle_type')->label('Vehicle Type')->options([
+                            'motorcycle' => 'Motorcycle',
+                            'scooter' => 'Scooter',
+                            'bicycle_16' => 'Bicycle 16 Inch',
+                            'bicycle_20' => 'Bicycle 20 Inch',
+                            'bicycle_24' => 'Bicycle 24 Inch',
+                            'car' => 'Car',
+                            'tricycle' => 'Tricycle',
+                            'island_pickup' => 'Island Pickup',
+                            'pickup' => 'Pickup',
+                            'buggy' => 'Buggy',
+                            'wheel_barrow' => 'Wheel Barrow',
+                        ])->required()
+                            ->rules([
+                                Rule::in([
+                                    'motorcycle',
+                                    'scooter',
+                                    'bicycle_16',
+                                    'bicycle_20',
+                                    'bicycle_24',
+                                    'car',
+                                    'tricycle',
+                                    'island_pickup',
+                                    'pickup',
+                                    'buggy',
+                                    'wheel_barrow',
+                                ]),
+                            ]),
 
                         Forms\Components\Select::make('brand_id')
                             ->relationship('brand', 'name')
