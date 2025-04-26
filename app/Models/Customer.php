@@ -21,12 +21,12 @@ class Customer extends Model
         return $this->hasMany(Vehicle::class);
     }
 
-    public function sales(): Customer|HasMany
+    public function sales(): HasMany
     {
         return $this->hasMany(Sale::class);
     }
 
-    public function quotations(): Customer|HasMany
+    public function quotations(): HasMany
     {
         return $this->hasMany(Quotation::class);
     }

@@ -1,10 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -15,13 +16,13 @@ return new class extends Migration {
             $table->string('expense_type');
             $table->date('date');
             $table->float('amount');
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->string('payment_method');
-            $table->string('vendor');
+            $table->foreignId('vendor_id')->constrained()->cascadeOnDelete();
             $table->string('invoice_number');
             $table->string('category');
-            $table->string('attachment');
-            $table->text('notes');
+            $table->string('attachment')->nullable();
+            $table->text('notes')->nullable();
             $table->integer('unit_price');
             $table->integer('qty');
             $table->float('rate');
@@ -45,7 +46,4 @@ return new class extends Migration {
 /**
  * total exps = qty * unit_price
  * unit price = rate + gst
- *
- *
- *
  */

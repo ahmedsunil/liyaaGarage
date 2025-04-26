@@ -28,16 +28,16 @@ class AssetResource extends Resource
             ->schema([
                 Forms\Components\Section::make()
                     ->schema([
-                        Forms\Components\TextInput::make('name'),
+                        Forms\Components\TextInput::make('name')->required(),
                         Forms\Components\Select::make('type')->options([
                             'tools' => 'Tools',
                             'equipments' => 'Equipments',
                             'others' => 'Others',
-                        ]),
-                        Forms\Components\DatePicker::make('purchased_date'),
-                        Forms\Components\TextInput::make('purchased_price'),
-                        Forms\Components\Textarea::make('description'),
-                        Forms\Components\Select::make('status')->options(AssetStatuses::class),
+                        ])->required(),
+                        Forms\Components\DatePicker::make('purchased_date')->required(),
+                        Forms\Components\TextInput::make('purchased_price')->required(),
+                        Forms\Components\Textarea::make('description')->required(),
+                        Forms\Components\Select::make('status')->options(AssetStatuses::class)->required(),
                     ]),
             ]);
     }

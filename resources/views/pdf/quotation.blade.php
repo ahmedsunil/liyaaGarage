@@ -4,8 +4,31 @@
 
     $business = Business::first();
 
-    $logoPath = storage_path('app/public/' . $business->logo_path);
-$logoData = base64_encode(file_get_contents($logoPath));
+function getLogoData($business) {
+    // Check custom logo
+    try {
+        if ($business->logo_path && Storage::disk('public')->exists($business->logo_path)) {
+            return base64_encode(Storage::disk('public')->get($business->logo_path));
+        }
+    } catch (Exception $e) {
+        logger()->error("Logo error: ".$e->getMessage());
+    }
+
+    // Check default logo
+    try {
+        $defaultPath = public_path('images/default-logo.png');
+        if (file_exists($defaultPath)) {
+            return base64_encode(file_get_contents($defaultPath));
+        }
+    } catch (Exception $e) {
+        logger()->error("Default logo error: ".$e->getMessage());
+    }
+
+    return null;
+}
+
+// Usage
+$logoData = getLogoData($business);
 @endphp
     <!DOCTYPE html>
 <html>
@@ -142,7 +165,7 @@ $logoData = base64_encode(file_get_contents($logoPath));
             <div class="info-section">
                 <h3>BILL TO</h3>
                 <p><strong>Customer Name</strong><br>{{ $quotation->customer->name }}</p>
-                <p><strong>Vehicle</strong><br>{{ $quotation->vehicle->number }}</p>
+                <p><strong>Vehicle</strong><br>{{ $quotation->vehicle->vehicle->number }}</p>
                 <p><strong>Phone</strong><br>{{ $quotation->customer->phone }}</p>
             </div>
 

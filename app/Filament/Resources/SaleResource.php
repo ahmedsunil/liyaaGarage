@@ -7,7 +7,6 @@ use Exception;
 use Filament\Forms;
 use App\Models\Sale;
 use Filament\Tables;
-use App\Models\Vehicle;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use App\Models\Customer;
@@ -18,8 +17,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use App\Support\Enums\TransactionType;
+use Illuminate\Database\Query\Builder;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Collection;
 use App\Filament\Resources\SaleResource\Pages;
@@ -38,10 +39,38 @@ class SaleResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
-                Tables\Columns\TextColumn::make('vehicle.customer.name')
-                    ->searchable()
-                    ->sortable(),
+                TextColumn::make('customer_name')
+                    ->label('Customer')
+                    ->getStateUsing(function ($record) {
+                        // If vehicle exists, use vehicle's customer
+                        if ($record->vehicle?->customer) {
+                            return $record->vehicle->customer->name;
+                        }
+
+                        // Otherwise use direct customer
+                        return $record->customer?->name ?? 'No Customer';
+                    })
+                    ->searchable(query: function (Builder $query, string $search) {
+                        $query->where(function ($q) use ($search) {
+                            $q->whereHas('customer', fn ($sub) => $sub->where('name', 'like', "%{$search}%"))
+                                ->orWhereHas('vehicle.customer',
+                                    fn ($sub) => $sub->where('name', 'like', "%{$search}%"));
+                        });
+                    })
+                    ->sortable(query: function (Builder $query, string $direction) {
+                        $query->orderBy(
+                            Customer::select('name')
+                                ->whereColumn('customers.id', 'sales.customer_id')
+                                ->orWhereColumn('customers.id', 'vehicles.customer_id'),
+                            $direction
+                        );
+                    }),
                 Tables\Columns\TextColumn::make('vehicle.vehicle_number')
+                    ->formatStateUsing(fn (
+                        $state,
+                        $record
+                    ): string => $record->vehicle?->vehicle_number ?? 'No Vehicle'
+                    )
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('transaction_type')->label('Transaction Type')->badge(),
@@ -61,7 +90,7 @@ class SaleResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    BulkAction::make('print')
+                    bulkaction::make('print')
                         ->label('Generate Invoices')
                         ->icon('heroicon-o-document-text')
                         ->action(function (Collection $records) {
@@ -269,30 +298,17 @@ class SaleResource extends Resource
                                     ->required()
                                     ->live()
                                     ->createOptionForm([
-                                        Forms\Components\TextInput::make('name'),
-                                        Forms\Components\TextInput::make('phone'),
-                                        Forms\Components\TextInput::make('email'),
-                                    ])
-                                    ->afterStateUpdated(fn (
-                                        Set $set
-                                    ) => $set('vehicle_id',
-                                        null)),
+                                        Forms\Components\TextInput::make('name')->required(),
+                                        Forms\Components\TextInput::make('phone')->required(),
+                                        Forms\Components\TextInput::make('email')->required(),
+                                    ]),
 
 
                                 Select::make('vehicle_id')
                                     ->label('Vehicle')
-                                    ->relationship('vehicle')
-                                    ->options(function (Get $get) {
-                                        $customerId = $get('customer_id');
-                                        if ($customerId) {
-                                            return Vehicle::where('customer_id',
-                                                $customerId)->pluck('vehicle_number',
-                                                    'id');
-                                        }
-
-                                        return [];
-                                    })
-                                    ->required()
+                                    ->relationship('vehicle', 'vehicle_number')
+                                    ->searchable() // Allows searching through all vehicles
+                                    ->preload() // Loads some options upfront for better performance
                                     ->createOptionForm([
                                         Forms\Components\Select::make('vehicle_type')
                                             ->options([
@@ -305,10 +321,11 @@ class SaleResource extends Resource
                                                 'pickup' => 'Pickup',
                                                 'buggy' => 'Buggy',
                                                 'wheel_barrow' => 'Wheel Barrow',
-                                            ])->label('Vehicle Type'),
+                                            ])->label('Vehicle Type')->required(),
+
                                         Forms\Components\Select::make('brand_id')
                                             ->relationship('brand',
-                                                'name')
+                                                'name')->required()
                                             ->createOptionForm([
                                                 TextInput::make('name')->label('Name')->live(onBlur: true)
                                                     ->afterStateUpdated(fn (
@@ -321,12 +338,13 @@ class SaleResource extends Resource
                                                     ignoreRecord: true)->required()->maxLength(255)->readOnly(),
                                             ]),
 
-                                        Forms\Components\TextInput::make('year_of_manufacture')->label('Year of Manufacture')->placeholder('2019'),
+                                        Forms\Components\TextInput::make('year_of_manufacture')->label('Year of Manufacture')->placeholder('2019')->required(),
                                         Forms\Components\TextInput::make('engine_number')->placeholder('Example: PJ12345U123456P'),
                                         Forms\Components\TextInput::make('chassis_number')->placeholder('Example: 1HGCM82633A123456'),
-                                        Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930'),
+                                        Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930')->required(),
+
                                         Forms\Components\Select::make('customer_id')->label('Customer / Owner')
-                                            ->searchable()
+                                            ->searchable()->required()
                                             ->getSearchResultsUsing(fn (
                                                 string $search
                                             ): array => Customer::where('name',
@@ -338,12 +356,10 @@ class SaleResource extends Resource
                                             ->getOptionLabelUsing(fn (
                                                 $value
                                             ): ?string => Customer::find($value)?->name),
-
-                                    ])
-                                    ->disabled(fn (Get $get
-                                    ): bool => $get('customer_id') === null),
+                                    ]),
 
 
+                                // end of a vehicle_id component
                                 Forms\Components\Select::make('transaction_type')->label('Transaction Type')
                                     ->options(TransactionType::class)
                                     ->default(TransactionType::PENDING)

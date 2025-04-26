@@ -58,10 +58,19 @@ class VehicleResource extends Resource
                                     'buggy',
                                     'wheel_barrow',
                                 ]),
-                            ]),
+                            ])->live(),
 
                         Forms\Components\Select::make('brand_id')
                             ->relationship('brand', 'name')
+                            ->required()
+                            ->rules([
+                                'required',
+                                'exists:brands,id',
+                            ])
+                            ->validationMessages([
+                                'required' => 'Please select a brand',
+                                'exists' => 'The selected brand no longer exists',
+                            ])
                             ->createOptionForm([
                                 TextInput::make('name')->label('Name')->live(onBlur: true)
                                     ->afterStateUpdated(fn (
@@ -79,7 +88,7 @@ class VehicleResource extends Resource
 
                         Forms\Components\TextInput::make('chassis_number')->placeholder('Example: 1HGCM82633A123456'),
 
-                        Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930'),
+                        Forms\Components\TextInput::make('vehicle_number')->label('Plate Number / Vehicle Tag')->placeholder('Example: P9930 OR BC-mobile number')->hint('If it is a bicycle or any other vehicle that doesnt have plate number, use code like WB for wheel barrow Example: WB-mobilenumber'),
 
                         Forms\Components\Select::make('customer_id')->label('Customer / Owner')
                             ->searchable()
@@ -104,7 +113,7 @@ class VehicleResource extends Resource
                 Tables\Columns\TextColumn::make('brand.name')->formatStateUsing(function ($state) {
                     return Str::title($state);
                 }),
-                Tables\Columns\TextColumn::make('vehicle_number'),
+                Tables\Columns\TextColumn::make('vehicle_number')->label('Plate Number / Vehicle Tag'),
                 Tables\Columns\TextColumn::make('customer.name')->label('Customer / Owner')->searchable(),
             ])
             ->filters([

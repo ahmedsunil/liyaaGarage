@@ -9,12 +9,10 @@ class InvoiceController extends Controller
 {
     public function downloadPdf(Sale $sale)
     {
-        $pdf = PDF::loadView('pdf.invoice', [
-            'sale' => $sale,
+        // Generate PDF
+        $pdf = PDF::loadView('pdf.single-invoice', [
+            'sale' => $sale, // Changed from 'sales' to 'sale' for consistency
         ]);
-
-        // Optional: Set paper size and orientation
-        $pdf->setPaper('a4', 'portrait');
 
         return $pdf->download("invoice-{$sale->id}.pdf");
     }

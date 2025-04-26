@@ -37,15 +37,15 @@ class ExpenseResource extends Resource
                                     'spare_parts' => 'Spare Parts',
                                     'tools' => 'Tools',
                                     'utility_bills' => 'Utility Bills',
-                                ]),
-                            Forms\Components\DatePicker::make('date'),
+                                ])->required(),
+                            Forms\Components\DatePicker::make('date')->required(),
                             Forms\Components\Textarea::make('description'),
                             Forms\Components\Select::make('payment_method')
                                 ->options([
                                     'cash' => 'Cash',
                                     'bank_transfer' => 'Bank Transfer',
                                     'card' => 'Card',
-                                ]),
+                                ])->required(),
                             Forms\Components\Select::make('vendor_id')
                                 ->relationship('vendors', 'name')
                                 ->searchable()
@@ -60,7 +60,7 @@ class ExpenseResource extends Resource
 //                                ->options(Vendor::pluck('name',
 //                                    'id'))  // Key-value pairs where key is the ID
                                 ->required(),
-                            Forms\Components\TextInput::make('invoice_number'),
+                            Forms\Components\TextInput::make('invoice_number')->required(),
                             Forms\Components\Select::make('category')
                                 ->options([
                                     'inventory' => 'Inventory',
@@ -73,9 +73,9 @@ class ExpenseResource extends Resource
                                     'taxes_and_licenses' => 'Taxes and Licenses',
                                     'vehicle_related' => 'Vehicle-Related',
                                     'miscellaneous' => 'Miscellaneous',
-                                ]),
+                                ])->required(),
                             Forms\Components\FileUpload::make('attachment')->label('Upload File (PDFs, JPG of Recipets, Invoices etc)'),
-                            Forms\Components\Textarea::make('notes'),
+                            Forms\Components\Textarea::make('notes')->required(),
                         ]),
 
                     Forms\Components\Section::make()
@@ -94,13 +94,14 @@ class ExpenseResource extends Resource
                                     $unitPrice = (float) $rate + (float) $gst;
                                     $set('unit_price_with_gst', number_format($unitPrice, 2));
 
-                                    // Calculate total_expense
+                                    // Calculate total_expenses
                                     $totalExpense = (float) $qty * (float) $unitPrice;
-                                    $set('total_expense', number_format($totalExpense, 2));
+                                    $set('total_expenses', number_format($totalExpense, 2));
                                 }),
                             Forms\Components\TextInput::make('qty')
                                 ->numeric()
                                 ->default(0)
+                                ->required()
                                 ->live(onBlur: true)
                                 ->afterStateUpdated(function (Get $get, Set $set) {
                                     $qty = $get('qty') ?? 0;
@@ -111,13 +112,14 @@ class ExpenseResource extends Resource
                                     $unitPrice = (float) $rate + (float) $gst;
                                     $set('unit_price_with_gst', number_format($unitPrice, 2));
 
-                                    // Calculate total_expense
+                                    // Calculate total_expenses
                                     $totalExpense = (float) $qty * (float) $unitPrice;
-                                    $set('total_expense', number_format($totalExpense, 2));
+                                    $set('total_expenses', number_format($totalExpense, 2));
                                 }),
 
                             Forms\Components\TextInput::make('gst')->numeric()->label('GST')
                                 ->live(onBlur: true)
+                                ->required()
                                 ->default(0)
                                 ->afterStateUpdated(function (Get $get, Set $set) {
                                     $qty = $get('qty') ?? 0;
@@ -128,12 +130,12 @@ class ExpenseResource extends Resource
                                     $unitPrice = (float) $rate + (float) $gst;
                                     $set('unit_price_with_gst', number_format($unitPrice, 2));
 
-                                    // Calculate total_expense
+                                    // Calculate total_expenses
                                     $totalExpense = (float) $qty * (float) $unitPrice;
-                                    $set('total_expense', number_format($totalExpense, 2));
+                                    $set('total_expenses', number_format($totalExpense, 2));
                                 }),
                             Forms\Components\TextInput::make('unit_price_with_gst')->live()->label('Unit Price (including GST)'),
-                            Forms\Components\TextInput::make('total_expense')->live()->label('Total Expense'),
+                            Forms\Components\TextInput::make('total_expenses')->live()->label('Total Expense')->readOnly(),
                         ]),
                 ]),
         ]);
@@ -171,7 +173,7 @@ class ExpenseResource extends Resource
         ];
     }
 
-    // Method to calculate total_expense
+    // Method to calculate total_expenses
 
     public static function getPages(): array
     {

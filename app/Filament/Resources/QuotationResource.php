@@ -4,7 +4,6 @@ namespace App\Filament\Resources;
 
 use Str;
 use Filament\Tables;
-use App\Models\Vehicle;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use App\Models\Customer;
@@ -219,30 +218,17 @@ class QuotationResource extends Resource
                                     ->required()
                                     ->live()
                                     ->createOptionForm([
-                                        TextInput::make('name'),
-                                        TextInput::make('phone'),
-                                        TextInput::make('email'),
-                                    ])
-                                    ->afterStateUpdated(fn (
-                                        Set $set
-                                    ) => $set('vehicle_id',
-                                        null)),
+                                        TextInput::make('name')->required(),
+                                        TextInput::make('phone')->required(),
+                                        TextInput::make('email')->required(),
+                                    ]),
 
 
                                 Select::make('vehicle_id')
                                     ->label('Vehicle')
-                                    ->relationship('vehicle')
-                                    ->options(function (Get $get) {
-                                        $customerId = $get('customer_id');
-                                        if ($customerId) {
-                                            return Vehicle::where('customer_id',
-                                                $customerId)->pluck('vehicle_number',
-                                                    'id');
-                                        }
-
-                                        return [];
-                                    })
-                                    ->required()
+                                    ->relationship('vehicle', 'vehicle_number')
+                                    ->searchable() // Allows searching through all vehicles
+                                    ->preload() // Loads some options upfront for better performance
                                     ->createOptionForm([
                                         Select::make('vehicle_type')
                                             ->options([
@@ -255,10 +241,11 @@ class QuotationResource extends Resource
                                                 'pickup' => 'Pickup',
                                                 'buggy' => 'Buggy',
                                                 'wheel_barrow' => 'Wheel Barrow',
-                                            ])->label('Vehicle Type'),
+                                            ])->label('Vehicle Type')->required(),
+
                                         Select::make('brand_id')
                                             ->relationship('brand',
-                                                'name')
+                                                'name')->required()
                                             ->createOptionForm([
                                                 TextInput::make('name')->label('Name')->live(onBlur: true)
                                                     ->afterStateUpdated(fn (
@@ -271,12 +258,13 @@ class QuotationResource extends Resource
                                                     ignoreRecord: true)->required()->maxLength(255)->readOnly(),
                                             ]),
 
-                                        TextInput::make('year_of_manufacture')->label('Year of Manufacture')->placeholder('2019'),
+                                        TextInput::make('year_of_manufacture')->label('Year of Manufacture')->placeholder('2019')->required(),
                                         TextInput::make('engine_number')->placeholder('Example: PJ12345U123456P'),
                                         TextInput::make('chassis_number')->placeholder('Example: 1HGCM82633A123456'),
-                                        TextInput::make('vehicle_number')->placeholder('Example: P9930'),
+                                        TextInput::make('vehicle_number')->placeholder('Example: P9930')->required(),
+
                                         Select::make('customer_id')->label('Customer / Owner')
-                                            ->searchable()
+                                            ->searchable()->required()
                                             ->getSearchResultsUsing(fn (
                                                 string $search
                                             ): array => Customer::where('name',
@@ -288,10 +276,7 @@ class QuotationResource extends Resource
                                             ->getOptionLabelUsing(fn (
                                                 $value
                                             ): ?string => Customer::find($value)?->name),
-
-                                    ])
-                                    ->disabled(fn (Get $get
-                                    ): bool => $get('customer_id') === null),
+                                    ]),
 
                                 TextInput::make('subtotal_amount')
                                     ->label('Subtotal')
@@ -358,7 +343,6 @@ class QuotationResource extends Resource
                 Tables\Columns\TextColumn::make('vehicle.vehicle_number')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('transaction_type')->label('Transaction Type')->badge(),
 
                 Tables\Columns\TextColumn::make('total_amount')
                     ->money('mvr')
@@ -371,7 +355,47 @@ class QuotationResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\ViewAction::make(),
+                //                Tables\Actions\Action::make('cloneToSale')
+                //                    ->label('Create Sale')
+                //                    ->icon('heroicon-o-clipboard-document-check')
+                //                    ->color('success')
+                //                    ->action(function (Quotation $record) {
+                //                        // Assuming you have a SaleResource and Sale model
+                //                        // First, we get all the quotation data we need
+                //                        $saleData = [
+                //                            'customer_id' => $record->customer_id,
+                //                            'vehicle_id' => $record->vehicle_id,
+                //                            'date' => now(),
+                //                            'subtotal_amount' => $record->subtotal_amount,
+                //                            'discount_percentage' => $record->discount_percentage,
+                //                            'discount_amount' => $record->discount_amount,
+                //                            'total_amount' => $record->total_amount,
+                //                            'transaction_type' => TransactionType::PENDING,
+                //                            // Update based on your enum
+                //                            'quotation_id' => $record->id,
+                //                            // Reference to the original quotation
+                //                        ];
+                //
+                //                        // Create a new sale
+                //                        $sale = Sale::create($saleData);
+                //
+                //                        // Clone all the quotation items to sale items
+                //                        foreach ($record->quotationItems as $item) {
+                //                            $sale->saleItems()->create([
+                //                                'stock_item_id' => $item->stock_item_id,
+                //                                'quantity' => $item->quantity,
+                //                                'unit_price' => $item->unit_price,
+                //                                'total_price' => $item->total_price,
+                //                            ]);
+                //                        }
+                //
+                //                        // Redirect to the edit page of the newly created sale
+                //                        return redirect()->route('filament.resources.sales.edit', $sale);
+                //                    })
+                //                    ->requiresConfirmation()
+                //                    ->modalHeading('Create Sale from Quotation')
+                //                    ->modalDescription('Are you sure you want to create a new sale from this quotation? All quotation data will be copied to the sale.')
+                //                    ->modalSubmitActionLabel('Yes, Create Sale'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

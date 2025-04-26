@@ -14,6 +14,8 @@ class Expense extends Model
     use HasFactory;
     use LogsActivity;
 
+    protected $guarded = [];
+
     public function vendors(): belongsTo
     {
         return $this->belongsTo(Vendor::class);
