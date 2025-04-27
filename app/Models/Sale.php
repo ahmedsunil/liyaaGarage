@@ -59,14 +59,19 @@ class Sale extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function quotation(): BelongsTo
+    {
+        return $this->belongsTo(Quotation::class);
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-                         ->logExcept($this->hidden)
-                         ->logAll()
-                         ->setDescriptionForEvent(function (string $eventName) {
-                             return "This {$this->formattedName} has been {$eventName}";
-                         });
+            ->logExcept($this->hidden)
+            ->logAll()
+            ->setDescriptionForEvent(function (string $eventName) {
+                return "This {$this->formattedName} has been {$eventName}";
+            });
     }
 
     public function formattedName(): Attribute

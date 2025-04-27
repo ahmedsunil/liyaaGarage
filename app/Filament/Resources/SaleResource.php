@@ -17,11 +17,12 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use App\Support\Enums\TransactionType;
-use Illuminate\Database\Query\Builder;
+// use Illuminate\Database\Query\Builder;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use App\Filament\Resources\SaleResource\Pages;
 
@@ -39,40 +40,69 @@ class SaleResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
+                //                TextColumn::make('customer_name')
+                //                    ->label('Customer')
+                //                    ->getStateUsing(function ($record) {
+                //                        // If vehicle exists, use vehicle's customer
+                //                        if ($record->vehicle?->customer) {
+                //                            return $record->vehicle->customer->name;
+                //                        }
+                //
+                //                        // Otherwise use direct customer
+                //                        return $record->customer?->name ?? 'No Customer';
+                //                    })
+                //                    ->searchable(query: function (Builder $query, string $search) {
+                //                        $query->where(function ($q) use ($search) {
+                //                            $q->whereHas('customer', fn ($sub) => $sub->where('name', 'like', "%{$search}%"))
+                //                                ->orWhereHas('vehicle.customer',
+                //                                    fn ($sub) => $sub->where('name', 'like', "%{$search}%"));
+                //                        });
+                //                    })
+                //                    ->sortable(query: function (Builder $query, string $direction) {
+                //                        $query->orderBy(
+                //                            Customer::select('name')
+                //                                ->whereColumn('customers.id', 'sales.customer_id')
+                //                                ->orWhereColumn('customers.id', 'vehicles.customer_id'),
+                //                            $direction
+                //                        );
+                //                    }),
                 TextColumn::make('customer_name')
                     ->label('Customer')
                     ->getStateUsing(function ($record) {
-                        // If vehicle exists, use vehicle's customer
                         if ($record->vehicle?->customer) {
                             return $record->vehicle->customer->name;
                         }
 
-                        // Otherwise use direct customer
                         return $record->customer?->name ?? 'No Customer';
                     })
                     ->searchable(query: function (Builder $query, string $search) {
                         $query->where(function ($q) use ($search) {
+                            // Search direct customers (even if vehicle is null)
                             $q->whereHas('customer', fn ($sub) => $sub->where('name', 'like', "%{$search}%"))
                                 ->orWhereHas('vehicle.customer',
-                                    fn ($sub) => $sub->where('name', 'like', "%{$search}%"));
+                                    fn ($sub) => $sub->where('name', 'like', "%{$search}%"))
+                                // Include cases where customer exists but vehicle is null
+                                ->orWhere(function ($sub) use ($search) {
+                                    $sub->whereNull('vehicle_id')
+                                        ->whereHas('customer',
+                                            fn ($subQ) => $subQ->where('name', 'like', "%{$search}%"));
+                                });
                         });
                     })
                     ->sortable(query: function (Builder $query, string $direction) {
                         $query->orderBy(
                             Customer::select('name')
-                                ->whereColumn('customers.id', 'sales.customer_id')
-                                ->orWhereColumn('customers.id', 'vehicles.customer_id'),
+                                ->whereColumn('customers.id', 'sales.customer_id'),
                             $direction
                         );
                     }),
-                Tables\Columns\TextColumn::make('vehicle.vehicle_number')
-                    ->formatStateUsing(fn (
-                        $state,
-                        $record
-                    ): string => $record->vehicle?->vehicle_number ?? 'No Vehicle'
-                    )
-                    ->searchable()
-                    ->sortable(),
+
+                TextColumn::make('vehicle.vehicle_number')
+                    ->label('Vehicle Number')
+                    ->default('No Vehicle')
+                    ->sortable()
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('transaction_type')->label('Transaction Type')->badge(),
 
                 Tables\Columns\TextColumn::make('total_amount')

@@ -3,6 +3,8 @@
 namespace App\Filament\Resources;
 
 use Str;
+use Exception;
+use App\Models\Sale;
 use Filament\Tables;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
@@ -355,47 +357,52 @@ class QuotationResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                //                Tables\Actions\Action::make('cloneToSale')
-                //                    ->label('Create Sale')
-                //                    ->icon('heroicon-o-clipboard-document-check')
-                //                    ->color('success')
-                //                    ->action(function (Quotation $record) {
-                //                        // Assuming you have a SaleResource and Sale model
-                //                        // First, we get all the quotation data we need
-                //                        $saleData = [
-                //                            'customer_id' => $record->customer_id,
-                //                            'vehicle_id' => $record->vehicle_id,
-                //                            'date' => now(),
-                //                            'subtotal_amount' => $record->subtotal_amount,
-                //                            'discount_percentage' => $record->discount_percentage,
-                //                            'discount_amount' => $record->discount_amount,
-                //                            'total_amount' => $record->total_amount,
-                //                            'transaction_type' => TransactionType::PENDING,
-                //                            // Update based on your enum
-                //                            'quotation_id' => $record->id,
-                //                            // Reference to the original quotation
-                //                        ];
-                //
-                //                        // Create a new sale
-                //                        $sale = Sale::create($saleData);
-                //
-                //                        // Clone all the quotation items to sale items
-                //                        foreach ($record->quotationItems as $item) {
-                //                            $sale->saleItems()->create([
-                //                                'stock_item_id' => $item->stock_item_id,
-                //                                'quantity' => $item->quantity,
-                //                                'unit_price' => $item->unit_price,
-                //                                'total_price' => $item->total_price,
-                //                            ]);
-                //                        }
-                //
-                //                        // Redirect to the edit page of the newly created sale
-                //                        return redirect()->route('filament.resources.sales.edit', $sale);
-                //                    })
-                //                    ->requiresConfirmation()
-                //                    ->modalHeading('Create Sale from Quotation')
-                //                    ->modalDescription('Are you sure you want to create a new sale from this quotation? All quotation data will be copied to the sale.')
-                //                    ->modalSubmitActionLabel('Yes, Create Sale'),
+                Tables\Actions\Action::make('cloneToSale')
+                    ->label('Create Sale')
+                    ->icon('heroicon-o-clipboard-document-check')
+                    ->color('success')
+                    ->action(function (Quotation $record) {
+                        // Assuming you have a SaleResource and Sale model
+                        // First, we get all the quotation data we need
+                        $saleData = [
+                            'customer_id' => $record->customer_id,
+                            'vehicle_id' => $record->vehicle_id,
+                            'date' => now(),
+                            'subtotal_amount' => $record->subtotal_amount,
+                            'discount_percentage' => $record->discount_percentage,
+                            'discount_amount' => $record->discount_amount,
+                            'total_amount' => $record->total_amount,
+                            'transaction_type' => TransactionType::PENDING,
+                            // Update based on your enum
+                            'quotation_id' => $record->id,
+                            // Reference to the original quotation
+                        ];
+
+                        // Create a new sale
+                        // Create the sale with validation
+                        $sale = Sale::create($saleData);
+
+                        // Validate and convert items
+                        if ($record->quotationItems->isEmpty()) {
+                            throw new Exception('Cannot create sale: Quotation has no items.');
+                        }
+
+                        foreach ($record->quotationItems as $item) {
+                            $sale->items()->create([
+                                'stock_item_id' => $item->stock_item_id,
+                                'quantity' => $item->quantity,
+                                'unit_price' => $item->unit_price,
+                                'total_price' => $item->total_price,
+                            ]);
+                        }
+
+                        // Redirect to the edit page of the newly created sale
+                        return redirect()->to(SaleResource::getUrl('edit', ['record' => $sale]));
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Create Sale from Quotation')
+                    ->modalDescription('Are you sure you want to create a new sale from this quotation? All quotation data will be copied to the sale.')
+                    ->modalSubmitActionLabel('Yes, Create Sale'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

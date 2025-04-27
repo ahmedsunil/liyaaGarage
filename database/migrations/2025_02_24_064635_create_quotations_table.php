@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('quotations', function (Blueprint $table) {
             $table->id();
             $table->date('date');
-            $table->foreignId('vehicle_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('vehicle_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             $table->decimal('subtotal_amount', 10, 2)->default(0);
             $table->boolean('is_service')->default(false);

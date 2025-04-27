@@ -17,6 +17,7 @@ return new class extends Migration
             $table->date('date');
             $table->foreignId('vehicle_id')->default(0)->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('quotation_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('transaction_type')->default(TransactionType::PENDING);
             $table->decimal('subtotal_amount', 10, 2)->default(0);
             $table->boolean('is_service')->default(false);
