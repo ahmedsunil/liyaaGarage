@@ -388,7 +388,7 @@ class StockItemResource extends Resource
 
         // Calculate Price per quantity
         if (! $isService) {
-            $cost_price_per_quantity = $cost_price / $qty;
+            $cost_price_per_quantity = $total_cost_price / $qty;
             $set('cost_price_per_quantity', $cost_price_per_quantity);
         }
     }

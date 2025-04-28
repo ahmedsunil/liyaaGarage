@@ -23,7 +23,7 @@ class DefaultUserSeeder extends Seeder
             ]
         );
 
-        // Create/update guest user and assign guest role
+        // Create/update a guest user and assign a guest role
         $guestUser = User::updateOrCreate(
             ['email' => 'zahir@garage.mv'],
             [
