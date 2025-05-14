@@ -101,7 +101,7 @@ class StockItemResource extends Resource
                         ->icon('heroicon-o-plus')
                         ->requiresConfirmation()
                         ->deselectRecordsAfterCompletion()
-                        ->form([  // Changed from function to direct array
+                        ->form([  // Changed from a function to a direct array
                             TextInput::make('quantity')
                                 ->label('Quantity to Add')
                                 ->numeric()
@@ -130,7 +130,7 @@ class StockItemResource extends Resource
                         ->icon('heroicon-o-minus')
                         ->requiresConfirmation()
                         ->deselectRecordsAfterCompletion()
-                        ->form([  // Changed from function to direct array
+                        ->form([  // Changed from a function to a direct array
                             TextInput::make('quantity')
                                 ->label('Quantity to Deduct')
                                 ->numeric()
@@ -249,7 +249,7 @@ class StockItemResource extends Resource
                                         Forms\Components\TextInput::make('email')->label('Email')->email(),
                                     ]),
                             ])
-                            ->columns(2),
+                            ->columns(),
 
                         Forms\Components\Section::make('Pricing & Stock')
                             ->schema([
@@ -366,7 +366,7 @@ class StockItemResource extends Resource
             ]);
     }
 
-    public static function getVendors(): Collection
+    public static function getVendors(): \Illuminate\Support\Collection
     {
         return Vendor::whereNotNull('id')->get()->pluck('name', 'id');
     }

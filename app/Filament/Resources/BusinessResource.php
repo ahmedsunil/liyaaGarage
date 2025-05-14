@@ -48,9 +48,19 @@ class BusinessResource extends Resource
                             TextInput::make('contact')->required(),
                             TextInput::make('invoice_number_prefix')->required(),
                             TextInput::make('email')->email()->required(),
+
                             FileUpload::make('logo_path')
-                                ->image()
-                                ->directory('logos'),
+                                ->disk('public')
+//                                ->directory('logos')
+                                ->visibility('public')
+                                ->preserveFilenames()
+                                ->acceptedFileTypes(['image/*'])
+                                ->maxSize(1024)
+                                ->openable()
+                                ->downloadable(),
+                            //                                ->image()
+                            //                                ->directory('logos'),
+                            //                            ->,
                         ]),
 
                     Section::make('Account Details')
