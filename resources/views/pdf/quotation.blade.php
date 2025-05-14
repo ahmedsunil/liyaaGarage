@@ -165,7 +165,7 @@ $logoData = getLogoData($business);
             <div class="info-section">
                 <h3>BILL TO</h3>
                 <p><strong>Customer Name</strong><br>{{ $quotation->customer->name }}</p>
-                <p><strong>Vehicle</strong><br>{{ $quotation->vehicle->vehicle_number }}</p>
+                <p><strong>Vehicle</strong><br>{{ $sale->vehicle->vehicle_number ?? '-' }}</p>
                 <p><strong>Phone</strong><br>{{ $quotation->customer->phone }}</p>
             </div>
 

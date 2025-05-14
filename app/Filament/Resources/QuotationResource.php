@@ -339,7 +339,7 @@ class QuotationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
-                Tables\Columns\TextColumn::make('vehicle.customer.name')
+                Tables\Columns\TextColumn::make('customer.name')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('vehicle.vehicle_number')
