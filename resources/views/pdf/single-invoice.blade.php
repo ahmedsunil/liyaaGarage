@@ -147,6 +147,10 @@ $logoData = getLogoData($business);
     </style>
 </head>
 <body>
+@php
+    $logoPath = storage_path('app/public/images/logo.jpg');
+    $defaultlogoData = base64_encode(file_get_contents($logoPath));
+@endphp
 <div class="invoice-container">
     <div class="header">
         <div class="invoice-title">
@@ -157,7 +161,7 @@ $logoData = getLogoData($business);
             @if($logoData)
                 <img src="data:image/jpeg;base64,{{ $logoData }}" width="60" alt="Logo">
             @else
-                <img src="data:image/jpeg;base64,{{ public_path('images/logo.jpg') }}" width="60" alt="Logo">
+                <img src="data:image/jpeg;base64,{{ $defaultlogoData }}" width="60" alt="Logo">
             @endif
             <h2>{{ $business->name }}</h2>
             <p>{{ $business->street_address }}</p>

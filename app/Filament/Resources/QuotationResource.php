@@ -54,6 +54,26 @@ class QuotationResource extends Resource
                                                 'id'))
                                             ->searchable()
                                             ->required()
+                                            ->getSearchResultsUsing(function (
+                                                string $search
+                                            ): array {
+                                                return StockItem::query()
+                                                    ->where('product_name',
+                                                        'like',
+                                                        "%{$search}%")
+                                                    ->orWhere('item_code',
+                                                        'like',
+                                                        "%{$search}%")
+                                                    ->limit(50) // Optional: Limit results to avoid performance issues
+                                                    ->pluck('product_name',
+                                                        'id')
+                                                    ->toArray();
+                                            })
+                                            ->getOptionLabelUsing(function (
+                                                $value
+                                            ): ?string {
+                                                return StockItem::find($value)?->product_name;
+                                            })
                                             ->live()
                                             ->afterStateUpdated(function (
                                                 $state,
