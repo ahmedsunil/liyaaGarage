@@ -154,9 +154,13 @@ $logoData = getLogoData($business);
                 <p>#{{ $business->invoice_number_prefix }}/{{ date('Y') }}
                     /{{ str_pad($sale->id + 1000, 4, '0', STR_PAD_LEFT) }}</p></div>
             <div class="company-info">
-                <img src="data:image/jpeg;base64,{{ $logoData }}" width="50" alt="Logo">
-                <h2>{{ Str::title($business->name) }}</h2>
-                <p>{{ Str::title($business->street_address) }}</p>
+                @if($logoData)
+                    <img src="data:image/jpeg;base64,{{ $logoData }}" width="60" alt="Logo">
+                @else
+                    <img src="https://i.postimg.cc/mkyTWP3t/photo-2025-05-14-23-04-56.jpg" width="60" alt="Logo">
+                @endif
+                <h2>{{ $business->name }}</h2>
+                <p>{{ $business->street_address }}</p>
                 <p>{{ $business->contact }}</p>
                 <p>{{ $business->email }}</p>
             </div>

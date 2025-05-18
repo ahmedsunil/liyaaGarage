@@ -153,9 +153,13 @@ $logoData = getLogoData($business);
                 <p>#QTN/{{ date('Y') }}
                     /{{ str_pad($quotation->id + 1000, 4, '0', STR_PAD_LEFT) }}</p></div>
             <div class="company-info">
-                <img src="data:image/jpeg;base64,{{ $logoData }}" width="50" alt="Logo">
-                <h2>{{ Str::title($business->name) }}</h2>
-                <p>{{ Str::title($business->street_address) }}</p>
+                @if($logoData)
+                    <img src="data:image/jpeg;base64,{{ $logoData }}" width="60" alt="Logo">
+                @else
+                    <img src="{{ storage_path('app/public/images/logo.jpg') }}" width="60" alt="Logo">
+                @endif
+                <h2>{{ $business->name }}</h2>
+                <p>{{ $business->street_address }}</p>
                 <p>{{ $business->contact }}</p>
                 <p>{{ $business->email }}</p>
             </div>

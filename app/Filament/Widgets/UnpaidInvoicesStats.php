@@ -24,7 +24,7 @@ class UnpaidInvoicesStats extends BaseWidget
 
 
         return [
-            Stat::make('Total Unpaid Amount', '$'.number_format($totalUnpaid))
+            Stat::make('Total Unpaid Amount', 'MVR '.number_format($totalUnpaid))
                 ->description('Total amount due from unpaid sales')
                 ->icon('heroicon-o-banknotes')
                 ->color('warning'),
