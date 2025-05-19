@@ -127,10 +127,6 @@ class PermissionsSeeder extends Seeder
                 'view any business',
                 'edit businesses',
                 'edit any business',
-                'delete businesses',
-                'delete any business',
-                'force delete any business',
-                'approve any business',
             ],
         ];
     }
