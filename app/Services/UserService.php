@@ -53,7 +53,8 @@ class UserService
     {
         $has_permission = auth()->user()->can('approveAny', User::class);
         if ($has_permission && $user_data->role) {
-            $user->assignRole($user_data->role);
+            // Use sync instead of assignRole to replace existing roles instead of adding to them
+            $user->roles()->sync([$user_data->role]);
 
             return;
         }
