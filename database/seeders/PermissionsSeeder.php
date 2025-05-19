@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Spatie\Permission\Models\Permission;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 
 class PermissionsSeeder extends Seeder
 {
@@ -15,7 +14,7 @@ class PermissionsSeeder extends Seeder
                 Permission::updateOrCreate([
                     'name' => $permission,
                 ], [
-                    'model'      => $model,
+                    'model' => $model,
                     'guard_name' => 'web',
                 ]);
             }
@@ -25,7 +24,7 @@ class PermissionsSeeder extends Seeder
     public function getPermissions(): array
     {
         return [
-            'user'       => [
+            'user' => [
                 'view users',
                 'view any user',
                 'edit users',
@@ -36,22 +35,22 @@ class PermissionsSeeder extends Seeder
                 'force delete any user',
                 'approve any user',
             ],
-            'role'       => [
+            'role' => [
                 'view roles',
                 'view any role',
                 'edit role',
                 'delete role',
                 'delete any role',
             ],
-            'logs'       => [
+            'logs' => [
                 'view any log',
                 'view logs',
             ],
-            'settings'   => [
+            'settings' => [
                 'view settings',
                 'edit settings',
             ],
-            'asset'      => [
+            'asset' => [
                 'view assets',
                 'view any asset',
                 'create assets',
@@ -60,7 +59,7 @@ class PermissionsSeeder extends Seeder
                 'delete assets',
                 'delete any asset',
             ],
-            'customer'   => [
+            'customer' => [
                 'view customers',
                 'view any customer',
                 'create customers',
@@ -69,7 +68,7 @@ class PermissionsSeeder extends Seeder
                 'delete customers',
                 'delete any customer',
             ],
-            'expense'    => [
+            'expense' => [
                 'view expenses',
                 'view any expense',
                 'create expenses',
@@ -78,7 +77,7 @@ class PermissionsSeeder extends Seeder
                 'delete expenses',
                 'delete any expense',
             ],
-            'sale'       => [
+            'sale' => [
                 'view sales',
                 'view any sale',
                 'create sales',
@@ -87,7 +86,7 @@ class PermissionsSeeder extends Seeder
                 'delete sales',
                 'delete any sale',
             ],
-            'sale-item'  => [
+            'sale-item' => [
                 'view sale items',
                 'view any sale item',
                 'create sale items',
@@ -105,7 +104,7 @@ class PermissionsSeeder extends Seeder
                 'delete stock items',
                 'delete any stock item',
             ],
-            'vehicle'    => [
+            'vehicle' => [
                 'view vehicles',
                 'view any vehicle',
                 'create vehicles',
@@ -114,7 +113,7 @@ class PermissionsSeeder extends Seeder
                 'delete vehicles',
                 'delete any vehicle',
             ],
-            'vendor'     => [
+            'vendor' => [
                 'view vendors',
                 'view any vendor',
                 'create vendors',
@@ -122,6 +121,16 @@ class PermissionsSeeder extends Seeder
                 'edit any vendor',
                 'delete vendors',
                 'delete any vendor',
+            ],
+            'business' => [
+                'view businesses',
+                'view any business',
+                'edit businesses',
+                'edit any business',
+                'delete businesses',
+                'delete any business',
+                'force delete any business',
+                'approve any business',
             ],
         ];
     }

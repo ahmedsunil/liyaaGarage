@@ -6,17 +6,32 @@ use App\Models\Role;
 use App\Models\Sale;
 use App\Models\User;
 use App\Models\Asset;
+use App\Models\Brand;
 use App\Models\Vendor;
 use App\Models\Expense;
 use App\Models\Vehicle;
+use App\Models\Business;
 use App\Models\Customer;
+use App\Models\Quotation;
 use App\Models\SaleItem;
 use App\Models\StockItem;
 use App\Models\Permission;
+use App\Models\QuotationItem;
 use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
+use App\Policies\SalePolicy;
+use App\Policies\AssetPolicy;
+use App\Policies\BrandPolicy;
+use App\Policies\VendorPolicy;
 use App\Policies\ActivityPolicy;
+use App\Policies\BusinessPolicy;
+use App\Policies\ExpensePolicy;
+use App\Policies\VehiclePolicy;
 use App\Policies\CustomerPolicy;
+use App\Policies\SaleItemPolicy;
+use App\Policies\QuotationPolicy;
+use App\Policies\StockItemPolicy;
+use App\Policies\QuotationItemPolicy;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -32,6 +47,17 @@ class AppServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Role::class => RolePolicy::class,
         Customer::class => CustomerPolicy::class,
+        StockItem::class => StockItemPolicy::class,
+        Asset::class => AssetPolicy::class,
+        Expense::class => ExpensePolicy::class,
+        Sale::class => SalePolicy::class,
+        SaleItem::class => SaleItemPolicy::class,
+        Vehicle::class => VehiclePolicy::class,
+        Vendor::class => VendorPolicy::class,
+        Brand::class => BrandPolicy::class,
+        Quotation::class => QuotationPolicy::class,
+        QuotationItem::class => QuotationItemPolicy::class,
+        Business::class => BusinessPolicy::class,
     ];
 
     public function boot(): void
@@ -63,6 +89,10 @@ class AppServiceProvider extends ServiceProvider
             'sale_item' => SaleItem::class,
             'vehicle' => Vehicle::class,
             'vendor' => Vendor::class,
+            'brand' => Brand::class,
+            'quotation' => Quotation::class,
+            'quotation_item' => QuotationItem::class,
+            'business' => Business::class,
         ]);
     }
 
