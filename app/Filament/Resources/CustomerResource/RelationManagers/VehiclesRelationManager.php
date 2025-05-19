@@ -35,7 +35,7 @@ class VehiclesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('vehicle_type')->formatStateUsing(function ($state) {
                     return Str::title($state);
                 }),
-                Tables\Columns\TextColumn::make('brand')->formatStateUsing(function ($state) {
+                Tables\Columns\TextColumn::make('brand.name')->formatStateUsing(function ($state) {
                     return Str::title($state);
                 }),
                 Tables\Columns\TextColumn::make('vehicle_number'),

@@ -16,6 +16,7 @@ use App\Models\Permission;
 use App\Policies\RolePolicy;
 use App\Policies\UserPolicy;
 use App\Policies\ActivityPolicy;
+use App\Policies\CustomerPolicy;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -30,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
         Activity::class => ActivityPolicy::class,
         User::class => UserPolicy::class,
         Role::class => RolePolicy::class,
+        Customer::class => CustomerPolicy::class,
     ];
 
     public function boot(): void

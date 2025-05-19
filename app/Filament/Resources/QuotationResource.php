@@ -64,7 +64,7 @@ class QuotationResource extends Resource
                                                     ->orWhere('item_code',
                                                         'like',
                                                         "%{$search}%")
-                                                    ->limit(50) // Optional: Limit results to avoid performance issues
+                                                    ->limit(50)
                                                     ->pluck('product_name',
                                                         'id')
                                                     ->toArray();
@@ -100,13 +100,13 @@ class QuotationResource extends Resource
                                                     $set('quantity', 1);
                                                 }
 
-                                                // Calculate total price for this item
+                                                // Calculate the total price for this item
                                                 $quantity = $stockItem->is_service->value ? 1 : floatval($get('quantity') ?? 1);
                                                 $total = round($quantity * $unitPrice,
                                                     2);
                                                 $set('total_price', $total);
 
-                                                // Update overall totals using array instead of collection
+                                                // Update overall totals using an array instead of a collection
                                                 $items = $get('../../quotationItems') ?? [];
                                                 foreach ($items as &$item) {
                                                     if ($item['stock_item_id'] === $state) {
