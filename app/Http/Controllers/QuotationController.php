@@ -9,7 +9,7 @@ class QuotationController extends Controller
 {
     public function downloadPdf(Quotation $quotation)
     {
-        $pdf = PDF::loadView('pdf.quotation', [
+        $pdf = PDF::loadView('pdf.single-quotation', [
             'quotation' => $quotation,
         ]);
 

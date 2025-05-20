@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Filament\Resources\QoutationResource\Pages;
+namespace App\Filament\Resources\QuotationResource\Pages;
 
 use Filament\Resources\Pages\CreateRecord;
 use App\Filament\Resources\QuotationResource;
 
-class CreateQoutation extends CreateRecord
+class CreateQuotation extends CreateRecord
 {
     protected static string $resource = QuotationResource::class;
 }

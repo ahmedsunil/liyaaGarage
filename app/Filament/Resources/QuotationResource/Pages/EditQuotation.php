@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Filament\Resources\QoutationResource\Pages;
+namespace App\Filament\Resources\QuotationResource\Pages;
 
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use App\Filament\Resources\QuotationResource;
 
-class EditQoutation extends EditRecord
+class EditQuotation extends EditRecord
 {
     protected static string $resource = QuotationResource::class;
 

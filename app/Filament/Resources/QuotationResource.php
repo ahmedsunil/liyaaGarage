@@ -24,7 +24,10 @@ use Filament\Tables\Actions\BulkAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Collection;
-use App\Filament\Resources\QoutationResource\Pages;
+use App\Filament\Resources\QuotationResource\Pages\EditQuotation;
+use App\Filament\Resources\QuotationResource\Pages\ViewQuotation;
+use App\Filament\Resources\QuotationResource\Pages\ListQuotations;
+use App\Filament\Resources\QuotationResource\Pages\CreateQuotation;
 
 class QuotationResource extends Resource
 {
@@ -377,6 +380,7 @@ class QuotationResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\Action::make('cloneToSale')
                     ->label('Create Sale')
                     ->icon('heroicon-o-clipboard-document-check')
@@ -460,9 +464,11 @@ class QuotationResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListQoutations::route('/'),
-            'create' => Pages\CreateQoutation::route('/create'),
-            'edit' => Pages\EditQoutation::route('/{record}/edit'),
+            'index' => ListQuotations::route('/'),
+            'create' => CreateQuotation::route('/create'),
+            'edit' => EditQuotation::route('/{record}/edit'),
+            'view' => ViewQuotation::route('/{record}'),
+
         ];
     }
 }

@@ -18,12 +18,12 @@ class QuotationPolicy
             return true;
         }
 
-        return $user->can('view quotations');
+        return $user->can('view quotation');
     }
 
     public function create(User $user): bool
     {
-        return $user->can('edit quotations');
+        return $user->can('edit quotation');
     }
 
     public function update(User $user, Quotation $quotation): bool
@@ -32,7 +32,7 @@ class QuotationPolicy
             return true;
         }
 
-        return $user->can('edit quotations');
+        return $user->can('edit quotation');
     }
 
     public function delete(User $user, Quotation $quotation): bool
@@ -41,7 +41,7 @@ class QuotationPolicy
             return true;
         }
 
-        return $user->can('delete quotations');
+        return $user->can('delete quotation');
     }
 
     public function deleteAny(User $user): bool

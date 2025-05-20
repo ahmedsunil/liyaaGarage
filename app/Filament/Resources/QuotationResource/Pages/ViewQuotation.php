@@ -1,23 +1,23 @@
 <?php
 
-namespace App\Filament\Resources\SaleResource\Pages;
+namespace App\Filament\Resources\QuotationResource\Pages;
 
 use Filament\Actions\Action;
 use Filament\Infolists\Infolist;
 use Filament\Support\Enums\FontWeight;
 use Filament\Infolists\Components\Grid;
-use App\Filament\Resources\SaleResource;
 use Filament\Infolists\Components\Group;
 use Filament\Infolists\Components\Split;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Enums\IconPosition;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use App\Filament\Resources\QuotationResource;
 use Filament\Infolists\Components\RepeatableEntry;
 
-class ViewSale extends ViewRecord
+class ViewQuotation extends ViewRecord
 {
-    protected static string $resource = SaleResource::class;
+    protected static string $resource = QuotationResource::class;
 
     public function infolist(Infolist $infolist): Infolist
     {
@@ -28,7 +28,7 @@ class ViewSale extends ViewRecord
                         Split::make([
                             Group::make([
                                 TextEntry::make('id')
-                                    ->label('Invoice #')
+                                    ->label('Quotation #')
                                     ->formatStateUsing(fn ($state) => str_pad($state, 6, '0', STR_PAD_LEFT))
                                     ->weight(FontWeight::Bold)
                                     ->size(TextEntry\TextEntrySize::Large),
@@ -50,9 +50,9 @@ class ViewSale extends ViewRecord
                         ])->from('md'),
                     ]),
 
-                Section::make('Items')
+                Section::make('Quotation Items')
                     ->schema([
-                        RepeatableEntry::make('items')
+                        RepeatableEntry::make('quotationItems')
                             ->schema([
                                 Grid::make(3)
                                     ->schema([
@@ -142,7 +142,7 @@ class ViewSale extends ViewRecord
                 ->label('Download PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('primary')
-                ->url(fn () => route('sales.invoice.pdf', ['sale' => $this->record])),
+                ->url(fn () => route('quotations.pdf', ['quotation' => $this->record])),
         ];
     }
 }
