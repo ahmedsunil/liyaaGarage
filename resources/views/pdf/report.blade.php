@@ -4,6 +4,12 @@
     use Illuminate\Support\Facades\Storage;
 
     $business = Business::first();
+    // Set default values if no business record exists
+    $businessName = $business ? $business->name : 'Liyaa Garage';
+    $businessAddress = $business ? $business->street_address : 'N/A';
+    $businessContact = $business ? $business->contact : 'N/A';
+    $businessEmail = $business ? $business->email : 'N/A';
+    $businessInvoicePrefix = $business ? $business->invoice_number_prefix : 'INV';
 
     function getLogoData($business) {
     // Check custom logo
@@ -11,7 +17,7 @@
         if ($business && $business->logo_path && Storage::disk('public')->exists($business->logo_path)) {
             return base64_encode(Storage::disk('public')->get($business->logo_path));
         }
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         logger()->error("Logo error: ".$e->getMessage());
     }
 
@@ -30,7 +36,7 @@ $logoData = getLogoData($business);
 <head>
     <meta charset="UTF-8">
 
-    <title>Invoice - {{ $business->name }}</title>
+    <title>Sales Report - {{ $businessName }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -144,7 +150,7 @@ $logoData = getLogoData($business);
     <div class="header">
         <div class="invoice-title">
             <h1>SALES REPORT</h1>
-            <p>#{{ $business->invoice_number_prefix }}/{{ date('Y') }}/{{ str_pad($sales->count(), 4, '0', STR_PAD_LEFT) }}</p>
+            <p>#{{ $businessInvoicePrefix }}/{{ date('Y') }}/{{ str_pad($sales->count(), 4, '0', STR_PAD_LEFT) }}</p>
             <!-- Debug info: {{ $sales->count() }} sales found -->
         </div>
         <div class="company-info">
@@ -153,56 +159,59 @@ $logoData = getLogoData($business);
             @else
                 <img src="https://i.postimg.cc/mkyTWP3t/photo-2025-05-14-23-04-56.jpg" width="60" alt="Logo">
             @endif
-            <h2>{{ $business->name }}</h2>
-            <p>{{ $business->street_address }}</p>
-            <p>{{ $business->contact }}</p>
-            <p>{{ $business->email }}</p>
+            <h2>{{ $businessName }}</h2>
+            <p>{{ $businessAddress }}</p>
+            <p>{{ $businessContact }}</p>
+            <p>{{ $businessEmail }}</p>
         </div>
     </div>
     <div class="info-container">
         <div class="info-section">
             <h3>Report Information</h3>
-            <p><strong>Report Name:</strong> {{ $reportName }}</p>
-            <p><strong>From Date:</strong> {{ \Carbon\Carbon::parse($fromDate)->format('d/m/Y') }}</p>
-            <p><strong>To Date:</strong> {{ \Carbon\Carbon::parse($toDate)->format('d/m/Y') }}</p>
+            {{-- <p><strong>Report Name:</strong> {{ $reportName }}</p> --}}
+            <p><strong>From Date:</strong> {{ Carbon::parse($fromDate)->format('d/m/Y') }}</p>
+            <p><strong>To Date:</strong> {{ Carbon::parse($toDate)->format('d/m/Y') }}</p>
         </div>
         <div class="info-section">
             <h3>Summary</h3>
             <p><strong>Total Sales:</strong> {{ $sales->count() }}</p>
+            <p><strong>Total Cash:</strong> {{ number_format($totalCash, 2) }}</p>
+            <p><strong>Total Transfer:</strong> {{ number_format($totalTransfer, 2) }}</p>
+            <p><strong>Total Pending:</strong> {{ number_format($totalPending, 2) }}</p>
             <p><strong>Total Amount:</strong> {{ number_format($totalAmount, 2) }}</p>
         </div>
         <div class="info-section">
             <h3>Generated</h3>
-            <p><strong>Date:</strong> {{ \Carbon\Carbon::now()->format('d/m/Y') }}</p>
-            <p><strong>Time:</strong> {{ \Carbon\Carbon::now()->format('H:i:s') }}</p>
+            <p><strong>Date:</strong> {{ Carbon::now()->format('d/m/Y') }}</p>
+            <p><strong>Time:</strong> {{ Carbon::now()->format('H:i:s') }}</p>
         </div>
     </div>
 
     <h2>Sales Details</h2>
     <table>
         <thead>
-            <tr>
-                <th>Sale ID</th>
-                <th>Date</th>
-                <th>Customer</th>
-                <th>Items</th>
-                <th>Total</th>
-            </tr>
+        <tr>
+            <th>Sale ID</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Transaction Type</th>
+            <th>Total</th>
+        </tr>
         </thead>
         <tbody>
-            @forelse($sales as $sale)
-                <tr>
-                    <td>{{ $sale->id }}</td>
-                    <td>{{ \Carbon\Carbon::parse($sale->date)->format('d/m/Y') }}</td>
-                    <td>{{ $sale->customer ? $sale->customer->name : 'N/A' }}</td>
-                    <td>{{ $sale->items->count() }}</td>
-                    <td>{{ number_format($sale->total_amount, 2) }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5" style="text-align: center;">No sales found for this period</td>
-                </tr>
-            @endforelse
+        @forelse($sales as $sale)
+            <tr>
+                <td>{{ $sale->id }}</td>
+                <td>{{ Carbon::parse($sale->date)->format('d/m/Y') }}</td>
+                <td>{{ $sale->customer ? $sale->customer->name : 'N/A' }}</td>
+                <td>{{ $sale->transaction_type }}</td>
+                <td>{{ number_format($sale->total_amount, 2) }}</td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="5" style="text-align: center;">No sales found for this period</td>
+            </tr>
+        @endforelse
         </tbody>
     </table>
 

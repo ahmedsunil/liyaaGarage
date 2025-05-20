@@ -17,8 +17,6 @@ class ViewReport extends ViewRecord
 {
     protected static string $resource = ReportResource::class;
 
-    // Ensure this property is non-static to match the parent class
-
     public function infolist(Infolist $infolist): Infolist
     {
         return $infolist
