@@ -138,11 +138,11 @@ class ViewSale extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('download')
-                ->label('Download PDF')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('primary')
-                ->url(fn () => route('sales.invoice.pdf', ['sale' => $this->record])),
+            //            Action::make('download')
+            //                ->label('Download PDF')
+            //                ->icon('heroicon-o-document-arrow-down')
+            //                ->color('primary')
+            //                ->url(fn () => route('sales.invoice.pdf', ['sale' => $this->record])),
         ];
     }
 }

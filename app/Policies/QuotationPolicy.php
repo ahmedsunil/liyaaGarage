@@ -9,7 +9,7 @@ class QuotationPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('view quotations');
+        return $user->can('view quotation');
     }
 
     public function view(User $user, Quotation $quotation): bool
