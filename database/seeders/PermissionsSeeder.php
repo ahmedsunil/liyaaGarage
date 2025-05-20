@@ -131,6 +131,15 @@ class PermissionsSeeder extends Seeder
                 'delete quotation items',
                 'delete any quotation item',
             ],
+            'brand' => [
+                'view brands',
+                'view any brand',
+                'create brand',
+                'edit brands',
+                'edit any brand',
+                'delete brands',
+                'delete any brand',
+            ],
             'vendor' => [
                 'view vendors',
                 'view any vendor',
@@ -145,6 +154,15 @@ class PermissionsSeeder extends Seeder
                 'view any business',
                 'edit businesses',
                 'edit any business',
+            ],
+            'report' => [
+                'view reports',
+                'view any report',
+                'edit reports',
+                'edit any report',
+                'delete reports',
+                'delete any report',
+                'force delete any report',
             ],
         ];
     }

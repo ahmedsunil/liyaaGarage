@@ -12,28 +12,30 @@ use App\Models\Expense;
 use App\Models\Vehicle;
 use App\Models\Business;
 use App\Models\Customer;
-use App\Models\Quotation;
+use App\Models\Report;
 use App\Models\SaleItem;
+use App\Models\Quotation;
 use App\Models\StockItem;
 use App\Models\Permission;
-use App\Models\QuotationItem;
 use App\Policies\RolePolicy;
-use App\Policies\UserPolicy;
 use App\Policies\SalePolicy;
+use App\Policies\UserPolicy;
+use App\Models\QuotationItem;
 use App\Policies\AssetPolicy;
 use App\Policies\BrandPolicy;
 use App\Policies\VendorPolicy;
-use App\Policies\ActivityPolicy;
-use App\Policies\BusinessPolicy;
 use App\Policies\ExpensePolicy;
 use App\Policies\VehiclePolicy;
+use App\Policies\ActivityPolicy;
+use App\Policies\BusinessPolicy;
 use App\Policies\CustomerPolicy;
+use App\Policies\ReportPolicy;
 use App\Policies\SaleItemPolicy;
 use App\Policies\QuotationPolicy;
 use App\Policies\StockItemPolicy;
-use App\Policies\QuotationItemPolicy;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Gate;
+use App\Policies\QuotationItemPolicy;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Activitylog\Models\Activity;
 use Filament\Support\Facades\FilamentAsset;
@@ -57,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
         Brand::class => BrandPolicy::class,
         Quotation::class => QuotationPolicy::class,
         QuotationItem::class => QuotationItemPolicy::class,
+        Report::class => ReportPolicy::class,
         Business::class => BusinessPolicy::class,
     ];
 
@@ -92,6 +95,7 @@ class AppServiceProvider extends ServiceProvider
             'brand' => Brand::class,
             'quotation' => Quotation::class,
             'quotation_item' => QuotationItem::class,
+            'report' => Report::class,
             'business' => Business::class,
         ]);
     }

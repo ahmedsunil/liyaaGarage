@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use App\Support\Enums\UserStatuses;
+use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Log;
 
 class DefaultUserSeeder extends Seeder
 {
@@ -34,7 +36,18 @@ class DefaultUserSeeder extends Seeder
             ]
         );
 
-        // Assign guest role (assuming you're using Spatie Laravel Permissions or similar)
-        $guestUser->assignRole('guest');
+        // Assign guest role (using Spatie Laravel Permissions)
+        // Check if the role exists before assigning it
+        if (Role::where('name', 'guest')->exists()) {
+            $guestUser->assignRole('guest');
+        } else {
+            // Log a message if the command property is available
+            if (isset($this->command)) {
+                $this->command->info('Guest role does not exist. Please run the RolesSeeder first.');
+            } else {
+                // Otherwise, just log to the application log
+                Log::warning('Guest role does not exist. Please run the RolesSeeder first.');
+            }
+        }
     }
 }
