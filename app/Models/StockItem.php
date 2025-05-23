@@ -41,13 +41,19 @@ class StockItem extends Model
             ->where('quantity', '<=', 0)
             ->update(['stock_status' => 'out_of_stock']);
 
+        //        StockItem::where('is_service', false)
+        //            ->where('quantity', '>', 0)
+        //            ->where('quantity', '<', 10)
+        //            ->update(['stock_status' => 'low_stock']);
+
         StockItem::where('is_service', false)
             ->where('quantity', '>', 0)
-            ->where('quantity', '<', 10)
+            ->whereColumn('quantity', '<', 'quantity_threshold')  // Compare to DB column
             ->update(['stock_status' => 'low_stock']);
 
         StockItem::where('is_service', false)
-            ->where('quantity', '>=', 10)
+//            ->where('quantity', '>=', 10)
+            ->whereColumn('quantity', '>=', 'quantity_threshold')  // Compare to DB column
             ->update(['stock_status' => 'in_stock']);
 
         // Ensure all service items are marked as in_stock
