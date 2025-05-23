@@ -21,17 +21,38 @@ class StockItem extends Model
 
     protected $casts = [
         'stock_status' => StockStatus::class,
-        'is_service'   => ItemType::class,
+        'is_service' => ItemType::class,
     ];
 
     /**
      * Update stock status for all items
      */
+    //    public static function updateAllStockStatuses(): void
+    //    {
+    //        StockItem::where('quantity', '<=', 0)->update(['stock_status' => 'out_of_stock']);
+    //        StockItem::where('quantity', '>', 0)->where('quantity', '<', 10)->update(['stock_status' => 'low_stock']);
+    //        StockItem::where('quantity', '>=', 10)->update(['stock_status' => 'in_stock']);
+    //    }
+
     public static function updateAllStockStatuses(): void
     {
-        StockItem::where('quantity', '<=', 0)->update(['stock_status' => 'out_of_stock']);
-        StockItem::where('quantity', '>', 0)->where('quantity', '<', 10)->update(['stock_status' => 'low_stock']);
-        StockItem::where('quantity', '>=', 10)->update(['stock_status' => 'in_stock']);
+        // Update regular stock items
+        StockItem::where('is_service', false)
+            ->where('quantity', '<=', 0)
+            ->update(['stock_status' => 'out_of_stock']);
+
+        StockItem::where('is_service', false)
+            ->where('quantity', '>', 0)
+            ->where('quantity', '<', 10)
+            ->update(['stock_status' => 'low_stock']);
+
+        StockItem::where('is_service', false)
+            ->where('quantity', '>=', 10)
+            ->update(['stock_status' => 'in_stock']);
+
+        // Ensure all service items are marked as in_stock
+        StockItem::where('is_service', true)
+            ->update(['stock_status' => 'in_stock']);
     }
 
     public function saleItems(): HasMany
@@ -49,8 +70,8 @@ class StockItem extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-                         ->logExcept($this->hidden)
-                         ->logAll();
+            ->logExcept($this->hidden)
+            ->logAll();
     }
 
     public function formattedName(): Attribute
