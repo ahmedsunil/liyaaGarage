@@ -1,6 +1,6 @@
 @php
     use Carbon\Carbon;
-    use App\Models\Business;
+    use App\Models\Business;use App\Support\Enums\TransactionType;
 
     $business = Business::first();
 
@@ -157,7 +157,8 @@ $logoData = getLogoData($business);
                 @if($logoData)
                     <img src="data:image/jpeg;base64,{{ $logoData }}" width="60" alt="Logo">
                 @else
-                    <img src="https://i.postimg.cc/mkyTWP3t/photo-2025-05-14-23-04-56.jpg" width="60" alt="Logo">
+                    <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path('logo.jpg'))) }}"
+                         width="60" alt="Default Logo">
                 @endif
                 <h2>{{ $business->name }}</h2>
                 <p>{{ $business->street_address }}</p>
@@ -217,12 +218,21 @@ $logoData = getLogoData($business);
                 <p>Discount ({{ $sale->discount_percentage }}%): MVR {{ number_format($sale->discount_amount, 2) }}</p>
             @endif
             <h2>Total: MVR {{ number_format($sale->total_amount, 2) }}</h2>
+            @if($sale->transaction_type != TransactionType::PENDING)
+                <div>
+                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('stamp.png'))) }}"
+                         width="90"
+                         alt="Stamp">
+                </div>
+            @endif
         </div>
 
         <div class="footer">
             <p>{{ $business->footer_text }}</p>
             <p>© {{ date('Y') }} {{ $business->copyright }}</p>
         </div>
+
+
     </div>
     @if(!$loop->last)
         <div class="page-break"></div>
