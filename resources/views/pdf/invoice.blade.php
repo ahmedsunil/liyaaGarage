@@ -1,6 +1,7 @@
 @php
     use Carbon\Carbon;
-    use App\Models\Business;use App\Support\Enums\TransactionType;
+    use App\Models\Business;
+    use App\Support\Enums\TransactionType;
 
     $business = Business::first();
 
