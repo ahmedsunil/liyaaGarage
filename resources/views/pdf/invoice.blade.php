@@ -238,8 +238,6 @@ $logoData = getLogoData($business);
             <p>{{ $business->footer_text }}</p>
             <p>© {{ date('Y') }} {{ $business->copyright }}</p>
         </div>
-
-
     </div>
     @if(!$loop->last)
         <div class="page-break"></div>
