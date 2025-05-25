@@ -143,6 +143,11 @@ $logoData = getLogoData($business);
         .page-break {
             page-break-after: always;
         }
+
+        .rotated-stamp {
+            transform: rotate(15deg);
+            -webkit-transform: rotate(15deg);
+        }
     </style>
 </head>
 <body>
@@ -222,7 +227,8 @@ $logoData = getLogoData($business);
                 <div>
                     <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('stamp.png'))) }}"
                          width="90"
-                         alt="Stamp">
+                         alt="Stamp"
+                         class="rotated-stamp">
                 </div>
             @endif
         </div>

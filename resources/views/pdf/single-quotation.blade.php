@@ -211,9 +211,11 @@ $logoData = getLogoData($business);
     <div class="total-section">
         @if($quotation->discount_amount > 0)
             <p>Subtotal: MVR {{ number_format($quotation->subtotal_amount, 2) }}</p>
-            <p>Discount ({{ $quotation->discount_percentage }}%): MVR {{ number_format($quotation->discount_amount, 2) }}</p>
+            <p>Discount ({{ $quotation->discount_percentage }}%):
+                MVR {{ number_format($quotation->discount_amount, 2) }}</p>
         @endif
         <h2>Total: MVR {{ number_format($quotation->total_amount, 2) }}</h2>
+
     </div>
 
     <div class="footer">

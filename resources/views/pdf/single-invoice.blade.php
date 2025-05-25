@@ -144,6 +144,11 @@ $logoData = getLogoData($business);
         .page-break {
             page-break-after: always;
         }
+
+        .rotated-stamp {
+            transform: rotate(15deg);
+            -webkit-transform: rotate(15deg);
+        }
     </style>
 </head>
 <body>
@@ -158,7 +163,8 @@ $logoData = getLogoData($business);
             @if($logoData)
                 <img src="data:image/jpeg;base64,{{ $logoData }}" width="60" alt="Logo">
             @else
-                <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path('logo.jpg'))) }}" width="60" alt="Logo">
+                <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path('logo.jpg'))) }}"
+                     width="60" alt="Logo">
             @endif
             <h2>{{ $business->name }}</h2>
             <p>{{ $business->street_address }}</p>
@@ -218,15 +224,21 @@ $logoData = getLogoData($business);
             <p>Discount ({{ $sale->discount_percentage }}%): MVR {{ number_format($sale->discount_amount, 2) }}</p>
         @endif
         <h2>Total: MVR {{ number_format($sale->total_amount, 2) }}</h2>
+        @if($sale->transaction_type != TransactionType::PENDING)
+            <div>
+                <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('stamp.png'))) }}"
+                     width="90"
+                     alt="Stamp"
+                     class="rotated-stamp">
+            </div>
+        @endif
     </div>
 
     <div class="footer">
         <p>{{ $business->footer_text }}</p>
         <p>© {{ date('Y') }} {{ $business->copyright }}</p>
     </div>
-    <footer class="stamp">
-        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('stamp.png'))) }}" width="60" alt="Stamp">
-    </footer>
+
 </div>
 </body>
 </html>
