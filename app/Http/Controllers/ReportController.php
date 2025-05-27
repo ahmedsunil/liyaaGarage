@@ -21,11 +21,14 @@ class ReportController extends Controller
             $validated = $request->validate([
                 'from_date' => 'required|date',
                 'to_date' => 'required|date|after_or_equal:from_date',
+                'transaction_types' => 'nullable|array',
+                'transaction_types.*' => 'string',
             ]);
 
             Log::info('Generating new report', [
                 'from_date' => $validated['from_date'],
                 'to_date' => $validated['to_date'],
+                'transaction_types' => $validated['transaction_types'] ?? 'all',
             ]);
 
             // Generate report name in the format SalesReport(Date)
@@ -33,16 +36,21 @@ class ReportController extends Controller
             $reportName = "SalesReport({$fromDate})";
 
             // Get sales data for the specified date range
-            $sales = Sale::with(['items.stockItem', 'customer', 'vehicle'])
-                ->whereBetween('date', [$validated['from_date'], $validated['to_date']])
-                ->get();
+            $query = Sale::with(['items.stockItem', 'customer', 'vehicle'])
+                ->whereBetween('date', [$validated['from_date'], $validated['to_date']]);
+
+            // Filter by transaction types if provided
+            if (!empty($validated['transaction_types'])) {
+                $query->whereIn('transaction_type', $validated['transaction_types']);
+            }
+
+            $sales = $query->get();
 
             // Log the query for debugging
             Log::info('Sales query for report generation', [
-                'query' => Sale::with(['items.stockItem', 'customer', 'vehicle'])
-                    ->whereBetween('date', [$validated['from_date'], $validated['to_date']])
-                    ->toSql(),
-                'bindings' => [$validated['from_date'], $validated['to_date']],
+                'query' => $query->toSql(),
+                'bindings' => $query->getBindings(),
+                'transaction_types' => $validated['transaction_types'] ?? 'all',
                 'sales_count' => $sales->count(),
             ]);
 
@@ -96,11 +104,13 @@ class ReportController extends Controller
                     'from_date' => $validated['from_date'],
                     'to_date' => $validated['to_date'],
                     'file_path' => $filePath,
+                    'transaction_types' => $validated['transaction_types'] ?? null,
                 ]);
 
                 Log::info('Report record created', [
                     'report_id' => $report->id,
                     'file_path' => $filePath,
+                    'transaction_types' => $report->transaction_types,
                 ]);
 
                 return redirect()->route('filament.admin.resources.reports.index')
@@ -177,16 +187,21 @@ class ReportController extends Controller
                         'to_date' => $report->to_date,
                     ]);
 
-                    $sales = Sale::with(['items.stockItem', 'customer', 'vehicle'])
-                        ->whereBetween('date', [$report->from_date, $report->to_date])
-                        ->get();
+                    $query = Sale::with(['items.stockItem', 'customer', 'vehicle'])
+                        ->whereBetween('date', [$report->from_date, $report->to_date]);
+
+                    // Filter by transaction types if provided
+                    if (!empty($report->transaction_types)) {
+                        $query->whereIn('transaction_type', $report->transaction_types);
+                    }
+
+                    $sales = $query->get();
 
                     // Log the query for debugging
                     Log::info('Sales query for batch download', [
-                        'query' => Sale::with(['items.stockItem', 'customer', 'vehicle'])
-                            ->whereBetween('date', [$report->from_date, $report->to_date])
-                            ->toSql(),
-                        'bindings' => [$report->from_date, $report->to_date],
+                        'query' => $query->toSql(),
+                        'bindings' => $query->getBindings(),
+                        'transaction_types' => $report->transaction_types ?? 'all',
                         'sales_count' => $sales->count(),
                     ]);
 
@@ -303,16 +318,21 @@ class ReportController extends Controller
                     'to_date' => $report->to_date,
                 ]);
 
-                $sales = Sale::with(['items.stockItem', 'customer', 'vehicle'])
-                    ->whereBetween('date', [$report->from_date, $report->to_date])
-                    ->get();
+                $query = Sale::with(['items.stockItem', 'customer', 'vehicle'])
+                    ->whereBetween('date', [$report->from_date, $report->to_date]);
+
+                // Filter by transaction types if provided
+                if (!empty($report->transaction_types)) {
+                    $query->whereIn('transaction_type', $report->transaction_types);
+                }
+
+                $sales = $query->get();
 
                 // Log the query and sales data for debugging
                 Log::info('Sales query for download', [
-                    'query' => Sale::with(['items.stockItem', 'customer', 'vehicle'])
-                        ->whereBetween('date', [$report->from_date, $report->to_date])
-                        ->toSql(),
-                    'bindings' => [$report->from_date, $report->to_date],
+                    'query' => $query->toSql(),
+                    'bindings' => $query->getBindings(),
+                    'transaction_types' => $report->transaction_types ?? 'all',
                     'sales_count' => $sales->count(),
                 ]);
 

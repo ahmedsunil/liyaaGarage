@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Support\Collection;
+use App\Support\Enums\TransactionType;
 use App\Filament\Resources\ReportResource\Pages;
 
 class ReportResource extends Resource
@@ -32,6 +33,15 @@ class ReportResource extends Resource
                     ->required()
                     ->label('To Date')
                     ->afterOrEqual('from_date'),
+                Forms\Components\CheckboxList::make('transaction_types')
+                    ->options([
+                        TransactionType::CASH->value => 'Cash',
+                        TransactionType::TRANSFER->value => 'Transfer',
+                        TransactionType::PENDING->value => 'Pending',
+                    ])
+                    ->label('Transaction Types')
+                    ->helperText('Select transaction types to include in the report')
+                    ->columns(3),
             ]);
     }
 

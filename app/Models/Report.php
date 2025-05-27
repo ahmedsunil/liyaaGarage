@@ -14,11 +14,13 @@ class Report extends Model
         'from_date',
         'to_date',
         'file_path',
+        'transaction_types',
     ];
 
     protected $casts = [
         'from_date' => 'date',
         'to_date' => 'date',
+        'transaction_types' => 'array',
     ];
 
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
