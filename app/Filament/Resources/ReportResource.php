@@ -26,22 +26,24 @@ class ReportResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\DatePicker::make('from_date')
-                    ->required()
-                    ->label('From Date'),
-                Forms\Components\DatePicker::make('to_date')
-                    ->required()
-                    ->label('To Date')
-                    ->afterOrEqual('from_date'),
-                Forms\Components\CheckboxList::make('transaction_types')
-                    ->options([
-                        TransactionType::CASH->value => 'Cash',
-                        TransactionType::TRANSFER->value => 'Transfer',
-                        TransactionType::PENDING->value => 'Pending',
-                    ])
-                    ->label('Transaction Types')
-                    ->helperText('Select transaction types to include in the report')
-                    ->columns(3),
+                Forms\Components\Section::make([
+                    Forms\Components\DatePicker::make('from_date')
+                        ->required()
+                        ->label('From Date'),
+                    Forms\Components\DatePicker::make('to_date')
+                        ->required()
+                        ->label('To Date')
+                        ->afterOrEqual('from_date'),
+                    Forms\Components\CheckboxList::make('transaction_types')
+                        ->options([
+                            TransactionType::CASH->value => 'Cash',
+                            TransactionType::TRANSFER->value => 'Transfer',
+                            TransactionType::PENDING->value => 'Pending',
+                        ])
+                        ->label('Transaction Types')
+                        ->helperText('Select transaction types to include in the report')
+                        ->columns(1),
+                ]),
             ]);
     }
 
