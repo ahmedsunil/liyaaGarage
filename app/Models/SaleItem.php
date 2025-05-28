@@ -92,7 +92,13 @@ class SaleItem extends Model
         static::creating(function ($salesItem) {
             try {
                 DB::transaction(function () use ($salesItem) {
-                    $stockItem = $salesItem->stockItem->lockForUpdate()->first();
+                    $stockItem = $salesItem->stockItem()->lockForUpdate()->first();
+
+                    if (!$stockItem) {
+                        throw ValidationException::withMessages([
+                            'stock' => "Stock item not found for sales item",
+                        ]);
+                    }
 
                     if ($stockItem->is_service->value == 0) {
                         if ($stockItem->quantity >= $salesItem->quantity) {
@@ -143,7 +149,13 @@ class SaleItem extends Model
         static::updating(function ($salesItem) {
             try {
                 DB::transaction(function () use ($salesItem) {
-                    $stockItem = $salesItem->stockItem->lockForUpdate()->first();
+                    $stockItem = $salesItem->stockItem()->lockForUpdate()->first();
+
+                    if (!$stockItem) {
+                        throw ValidationException::withMessages([
+                            'stock' => "Stock item not found for sales item",
+                        ]);
+                    }
 
                     if ($stockItem->is_service->value == 0) {
                         // Calculate the change in quantity
@@ -210,7 +222,12 @@ class SaleItem extends Model
 
         static::deleted(function ($salesItem) {
             DB::transaction(function () use ($salesItem) {
-                $stockItem = $salesItem->stockItem;
+                $stockItem = $salesItem->stockItem()->first();
+
+                if (!$stockItem) {
+                    // If stock item doesn't exist, nothing to update
+                    return;
+                }
 
                 if ($stockItem->is_service->value == 0) {
                     $stockItem->quantity += $salesItem->quantity;
@@ -223,10 +240,12 @@ class SaleItem extends Model
 
     public function updateStockStatus(): void
     {
-        $stockItem = $this->stockItem;
+        $stockItem = $this->stockItem()->first();
 
         if (! $stockItem) {
-            throw new Exception('Stock item not found for sales item '.$this->id);
+            throw ValidationException::withMessages([
+                'stock' => "Stock item not found for sales item ".$this->id,
+            ]);
         }
 
         // Determine the stock status
