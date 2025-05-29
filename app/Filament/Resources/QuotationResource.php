@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use Str;
 use Exception;
+use App\Models\Pos;
 use App\Models\Sale;
 use Filament\Tables;
 use Filament\Forms\Get;
@@ -404,7 +405,7 @@ class QuotationResource extends Resource
 
                         // Create a new sale
                         // Create the sale with validation
-                        $sale = Sale::create($saleData);
+                        $sale = Pos::create($saleData);
 
                         // Validate and convert items
                         if ($record->quotationItems->isEmpty()) {
@@ -421,7 +422,7 @@ class QuotationResource extends Resource
                         }
 
                         // Redirect to the edit page of the newly created sale
-                        return redirect()->to(SaleResource::getUrl('edit', ['record' => $sale]));
+                        return redirect()->to(PosResource::getUrl('edit', ['record' => $sale]));
                     })
                     ->requiresConfirmation()
                     ->modalHeading('Create Sale from Quotation')

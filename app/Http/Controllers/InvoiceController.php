@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pos;
 use App\Models\Sale;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -29,6 +30,37 @@ class InvoiceController extends Controller
             [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'attachment; filename="invoice-'.$sale->id.'.pdf"',
+            ]
+        );
+    }
+
+    public function downloadPosPdf(Pos $pos)
+    {
+        // Convert the JSON sale_items to a collection similar to the Sale->items relationship
+        $saleItemsCollection = collect($pos->sale_items)->map(function ($item) {
+            // Create an object with properties similar to SaleItem
+            $itemObject = (object) $item;
+
+            // Add a stockItem property that mimics the SaleItem->stockItem relationship
+            $itemObject->stockItem = \App\Models\StockItem::find($item['stock_item_id']);
+
+            return $itemObject;
+        });
+
+        // Create a modified pos object with an 'items' property for the view
+        $posWithItems = clone $pos;
+        $posWithItems->items = $saleItemsCollection;
+
+        $pdf = PDF::loadView('pdf.single-invoice', ['sale' => $posWithItems]);
+
+        return response()->streamDownload(
+            function () use ($pdf) {
+                echo $pdf->stream();
+            },
+            "pos-invoice-{$pos->id}.pdf",
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="pos-invoice-'.$pos->id.'.pdf"',
             ]
         );
     }

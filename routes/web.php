@@ -14,6 +14,10 @@ Route::get('/sales/{sale}/invoice/pdf', [InvoiceController::class, 'downloadPdf'
     ->name('sales.invoice.pdf')
     ->middleware(['auth']);
 
+Route::get('/pos/{pos}/invoice/pdf', [InvoiceController::class, 'downloadPosPdf'])
+    ->name('pos.invoice.pdf')
+    ->middleware(['auth']);
+
 Route::get('/quotations/{quotation}/quotation/pdf', [QuotationController::class, 'downloadPdf'])
     ->name('quotations.pdf')
     ->middleware(['auth']);

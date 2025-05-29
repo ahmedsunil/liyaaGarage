@@ -4,8 +4,8 @@ namespace App\Filament\Resources;
 
 use Str;
 use Exception;
+use App\Models\Pos;
 use Filament\Forms;
-use App\Models\Sale;
 use Filament\Tables;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
@@ -17,20 +17,21 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use App\Support\Enums\TransactionType;
-// use Illuminate\Database\Query\Builder;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use App\Filament\Resources\SaleResource\Pages;
+use App\Filament\Resources\PosResource\Pages;
 
-class SaleResource extends Resource
+class PosResource extends Resource
 {
-    protected static ?string $model = Sale::class;
+    protected static ?string $model = Pos::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
+
+    protected static ?string $label = 'POS';
 
     /**
      * @throws Exception
@@ -40,32 +41,6 @@ class SaleResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
-                //                TextColumn::make('customer_name')
-                //                    ->label('Customer')
-                //                    ->getStateUsing(function ($record) {
-                //                        // If vehicle exists, use vehicle's customer
-                //                        if ($record->vehicle?->customer) {
-                //                            return $record->vehicle->customer->name;
-                //                        }
-                //
-                //                        // Otherwise use direct customer
-                //                        return $record->customer?->name ?? 'No Customer';
-                //                    })
-                //                    ->searchable(query: function (Builder $query, string $search) {
-                //                        $query->where(function ($q) use ($search) {
-                //                            $q->whereHas('customer', fn ($sub) => $sub->where('name', 'like', "%{$search}%"))
-                //                                ->orWhereHas('vehicle.customer',
-                //                                    fn ($sub) => $sub->where('name', 'like', "%{$search}%"));
-                //                        });
-                //                    })
-                //                    ->sortable(query: function (Builder $query, string $direction) {
-                //                        $query->orderBy(
-                //                            Customer::select('name')
-                //                                ->whereColumn('customers.id', 'sales.customer_id')
-                //                                ->orWhereColumn('customers.id', 'vehicles.customer_id'),
-                //                            $direction
-                //                        );
-                //                    }),
                 TextColumn::make('customer_name')
                     ->label('Customer')
                     ->getStateUsing(function ($record) {
@@ -92,7 +67,7 @@ class SaleResource extends Resource
                     ->sortable(query: function (Builder $query, string $direction) {
                         $query->orderBy(
                             Customer::select('name')
-                                ->whereColumn('customers.id', 'sales.customer_id'),
+                                ->whereColumn('customers.id', 'pos.customer_id'),
                             $direction
                         );
                     }),
@@ -120,19 +95,39 @@ class SaleResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    bulkaction::make('print')
+                    BulkAction::make('print')
                         ->label('Generate Invoices')
                         ->icon('heroicon-o-document-text')
                         ->action(function (Collection $records) {
+                            // Transform Pos records to have 'items' property like Sale records
+                            $transformedRecords = $records->map(function ($pos) {
+                                // Convert the JSON sale_items to a collection similar to the Sale->items relationship
+                                $saleItemsCollection = collect($pos->sale_items)->map(function ($item) {
+                                    // Create an object with properties similar to SaleItem
+                                    $itemObject = (object) $item;
+
+                                    // Add a stockItem property that mimics the SaleItem->stockItem relationship
+                                    $itemObject->stockItem = StockItem::find($item['stock_item_id']);
+
+                                    return $itemObject;
+                                });
+
+                                // Create a modified pos object with an 'items' property for the view
+                                $posWithItems = clone $pos;
+                                $posWithItems->items = $saleItemsCollection;
+
+                                return $posWithItems;
+                            });
+
                             $pdf = PDF::loadView('pdf.invoice', [
-                                'sales' => $records,
+                                'sales' => $transformedRecords,
                             ]);
 
-                            // Get first sale's customer info for filename
-                            $firstSale = $records->first();
-                            $filename = str_replace(' ', '_', strtolower($firstSale->customer->name))
+                            // Get first pos's customer info for filename
+                            $firstPos = $records->first();
+                            $filename = str_replace(' ', '_', strtolower($firstPos->customer->name))
                                 .'_'
-                                .$firstSale->customer->phone
+                                .$firstPos->customer->phone
                                 .'.pdf';
 
                             return response()->streamDownload(function () use ($pdf) {
@@ -150,10 +145,9 @@ class SaleResource extends Resource
             ->schema([
                 Forms\Components\Grid::make(12)
                     ->schema([
-                        Forms\Components\Section::make('Sale')
+                        Forms\Components\Section::make('POS Sale')
                             ->schema([
-                                Repeater::make('items')
-                                    ->relationship('items')
+                                Repeater::make('sale_items')
                                     ->label('Products and Services')
                                     ->schema([
                                         Select::make('stock_item_id')
@@ -215,7 +209,7 @@ class SaleResource extends Resource
                                                 $set('total_price', $total);
 
                                                 // Update overall totals using array instead of collection
-                                                $items = $get('../../items') ?? [];
+                                                $items = $get('../../sale_items') ?? [];
                                                 foreach ($items as &$item) {
                                                     if ($item['stock_item_id'] === $state) {
                                                         $item['total_price'] = $total;
@@ -237,7 +231,6 @@ class SaleResource extends Resource
                                                     $subtotal - $discountAmount);
                                             }),
 
-                                        // good version
                                         TextInput::make('quantity')
                                             ->label('Quantity')
                                             ->numeric()
@@ -256,7 +249,6 @@ class SaleResource extends Resource
                                             ->minValue(1)
                                             ->default(1)
                                             ->required()
-                                            ->dehydrated()
                                             ->live()
                                             ->disabled(fn (Get $get
                                             ): bool => StockItem::find($get('stock_item_id'))?->is_service->value == '1'
@@ -275,7 +267,7 @@ class SaleResource extends Resource
                                                     $total);
 
                                                 // Update overall totals
-                                                $items = $get('../../items') ?? [];
+                                                $items = $get('../../sale_items') ?? [];
                                                 $currentState = $get('stock_item_id');
 
                                                 foreach ($items as &$item) {
@@ -303,15 +295,13 @@ class SaleResource extends Resource
                                             ->label('Unit Price')
                                             ->prefix('MVR')
                                             ->numeric()
-                                            ->readOnly()
-                                            ->dehydrated(true),
+                                            ->readOnly(),
 
                                         TextInput::make('total_price')
                                             ->label('Total Price')
                                             ->prefix('MVR')
                                             ->numeric()
-                                            ->readOnly()
-                                            ->dehydrated(true),
+                                            ->readOnly(),
                                     ])
                                     ->columns(4)
                                     ->columnSpan(9)
@@ -325,7 +315,7 @@ class SaleResource extends Resource
                                     }),
                             ])->columnSpan(9),
 
-                        Forms\Components\Section::make('Sale Details')
+                        Forms\Components\Section::make('POS Details')
                             ->schema([
                                 Forms\Components\DatePicker::make('date')
                                     ->required()
@@ -420,6 +410,7 @@ class SaleResource extends Resource
                                     ->label('Subtotal')
                                     ->prefix('MVR')
                                     ->disabled()
+                                    ->dehydrated()
                                     ->live(),
 
                                 TextInput::make('discount_percentage')
@@ -458,7 +449,7 @@ class SaleResource extends Resource
 
     protected static function calculateTotals(Set $set, Get $get): void
     {
-        $subtotal = collect($get('items'))->sum(function ($item) {
+        $subtotal = collect($get('sale_items'))->sum(function ($item) {
             if (empty($item['stock_item_id'])) {
                 return 0;
             }
@@ -484,10 +475,10 @@ class SaleResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSales::route('/'),
-            'create' => Pages\CreateSale::route('/create'),
-            'edit' => Pages\EditSale::route('/{record}/edit'),
-            'view' => Pages\ViewSale::route('/{record}'),
+            'index' => Pages\ListPos::route('/'),
+            'create' => Pages\CreatePos::route('/create'),
+            'edit' => Pages\EditPos::route('/{record}/edit'),
+            'view' => Pages\ViewPos::route('/{record}'),
         ];
     }
 }

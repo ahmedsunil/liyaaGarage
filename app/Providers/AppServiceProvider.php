@@ -12,6 +12,7 @@ use App\Models\Expense;
 use App\Models\Vehicle;
 use App\Models\Business;
 use App\Models\Customer;
+use App\Models\Pos;
 use App\Models\Report;
 use App\Models\SaleItem;
 use App\Models\Quotation;
@@ -97,6 +98,7 @@ class AppServiceProvider extends ServiceProvider
             'quotation_item' => QuotationItem::class,
             'report' => Report::class,
             'business' => Business::class,
+            'pos' => Pos::class,
         ]);
     }
 
