@@ -39,55 +39,55 @@ class PosResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['vehicle', 'vehicle.customer', 'customer']))
+            ->modifyQueryUsing(fn(Builder $query) => $query->with(['vehicle', 'vehicle.customer', 'customer']))
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 TextColumn::make('customer_name')
-                    ->label('Customer')
-                    ->getStateUsing(function ($record) {
-                        if ($record->vehicle?->customer) {
-                            return $record->vehicle->customer->name;
-                        }
+                          ->label('Customer')
+                          ->getStateUsing(function ($record) {
+                              if ($record->vehicle?->customer) {
+                                  return $record->vehicle->customer->name;
+                              }
 
-                        return $record->customer?->name ?? 'No Customer';
-                    })
-                    ->searchable(query: function (Builder $query, string $search) {
-                        $query->where(function ($q) use ($search) {
-                            // Search direct customers (even if vehicle is null)
-                            $q->whereHas('customer', fn ($sub) => $sub->where('name', 'like', "%{$search}%"))
-                                ->orWhereHas('vehicle.customer',
-                                    fn ($sub) => $sub->where('name', 'like', "%{$search}%"))
-                                // Include cases where customer exists but vehicle is null
-                                ->orWhere(function ($sub) use ($search) {
-                                    $sub->whereNull('vehicle_id')
-                                        ->whereHas('customer',
-                                            fn ($subQ) => $subQ->where('name', 'like', "%{$search}%"));
-                                });
-                        });
-                    })
-                    ->sortable(query: function (Builder $query, string $direction) {
-                        $query->orderBy(
-                            Customer::select('name')
-                                ->whereColumn('customers.id', 'pos.customer_id'),
-                            $direction
-                        );
-                    }),
+                              return $record->customer?->name ?? 'No Customer';
+                          })
+                          ->searchable(query: function (Builder $query, string $search) {
+                              $query->where(function ($q) use ($search) {
+                                  // Search direct customers (even if vehicle is null)
+                                  $q->whereHas('customer', fn($sub) => $sub->where('name', 'like', "%{$search}%"))
+                                    ->orWhereHas('vehicle.customer',
+                                        fn($sub) => $sub->where('name', 'like', "%{$search}%"))
+                                      // Include cases where customer exists but vehicle is null
+                                    ->orWhere(function ($sub) use ($search) {
+                                          $sub->whereNull('vehicle_id')
+                                              ->whereHas('customer',
+                                                  fn($subQ) => $subQ->where('name', 'like', "%{$search}%"));
+                                      });
+                              });
+                          })
+                          ->sortable(query: function (Builder $query, string $direction) {
+                              $query->orderBy(
+                                  Customer::select('name')
+                                          ->whereColumn('customers.id', 'pos.customer_id'),
+                                  $direction
+                              );
+                          }),
 
                 TextColumn::make('vehicle.vehicle_number')
-                    ->label('Vehicle Number')
-                    ->default('No Vehicle')
-                    ->sortable()
-                    ->searchable(),
+                          ->label('Vehicle Number')
+                          ->default('No Vehicle')
+                          ->sortable()
+                          ->searchable(),
 
                 Tables\Columns\TextColumn::make('transaction_type')->label('Transaction Type')->badge(),
 
                 Tables\Columns\TextColumn::make('total_amount')
-                    ->money('mvr')
-                    ->sortable(),
+                                         ->money('mvr')
+                                         ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('transaction_type')
-                    ->options(TransactionType::class),
+                                           ->options(TransactionType::class),
 
             ])
             ->actions([
@@ -97,44 +97,50 @@ class PosResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     BulkAction::make('print')
-                        ->label('Generate Invoices')
-                        ->icon('heroicon-o-document-text')
-                        ->action(function (Collection $records) {
-                            // Transform Pos records to have 'items' property like Sale records
-                            $transformedRecords = $records->map(function ($pos) {
-                                // Convert the JSON sale_items to a collection similar to the Sale->items relationship
-                                $saleItemsCollection = collect($pos->sale_items)->map(function ($item) {
-                                    // Create an object with properties similar to SaleItem
-                                    $itemObject = (object) $item;
+                              ->label('Generate Invoices')
+                              ->icon('heroicon-o-document-text')
+                              ->action(function (Collection $records) {
+                                  // Transform Pos records to have 'items' property like Sale records
+                                  $transformedRecords = $records->map(function ($pos) {
+                                      // Convert the JSON sale_items to a collection similar to the Sale->items relationship
+                                      $saleItemsCollection = collect($pos->sale_items)->map(function ($item) {
+                                          // Create an object with properties similar to SaleItem
+                                          $itemObject = new \stdClass();
 
-                                    // Add a stockItem property that mimics the SaleItem->stockItem relationship
-                                    $itemObject->stockItem = StockItem::find($item['stock_item_id']);
+                                          // Explicitly set all required properties
+                                          $itemObject->stock_item_id = $item['stock_item_id'] ?? null;
+                                          $itemObject->quantity = $item['quantity'] ?? 0;
+                                          $itemObject->unit_price = $item['unit_price'] ?? 0;
+                                          $itemObject->total_price = $item['total_price'] ?? 0;
 
-                                    return $itemObject;
-                                });
+                                          // Add a stockItem property that mimics the SaleItem->stockItem relationship
+                                          $itemObject->stockItem = StockItem::find($item['stock_item_id']);
 
-                                // Create a modified pos object with an 'items' property for the view
-                                $posWithItems = clone $pos;
-                                $posWithItems->items = $saleItemsCollection;
+                                          return $itemObject;
+                                      });
 
-                                return $posWithItems;
-                            });
+                                      // Create a modified pos object with an 'items' property for the view
+                                      $posWithItems = clone $pos;
+                                      $posWithItems->items = $saleItemsCollection;
 
-                            $pdf = PDF::loadView('pdf.invoice', [
-                                'sales' => $transformedRecords,
-                            ]);
+                                      return $posWithItems;
+                                  });
 
-                            // Get first pos's customer info for filename
-                            $firstPos = $records->first();
-                            $filename = str_replace(' ', '_', strtolower($firstPos->customer->name))
-                                .'_'
-                                .$firstPos->customer->phone
-                                .'.pdf';
+                                  $pdf = PDF::loadView('pdf.invoice', [
+                                      'sales' => $transformedRecords,
+                                  ]);
 
-                            return response()->streamDownload(function () use ($pdf) {
-                                echo $pdf->output();
-                            }, $filename);
-                        }),
+                                  // Get first pos's customer info for filename
+                                  $firstPos = $records->first();
+                                  $filename = str_replace(' ', '_', strtolower($firstPos->customer->name))
+                                      .'_'
+                                      .$firstPos->customer->phone
+                                      .'.pdf';
+
+                                  return response()->streamDownload(function () use ($pdf) {
+                                      echo $pdf->output();
+                                  }, $filename);
+                              }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
@@ -145,353 +151,353 @@ class PosResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Grid::make(12)
-                    ->schema([
-                        Forms\Components\Section::make('POS Sale')
-                            ->schema([
-                                Repeater::make('sale_items')
-                                    ->label('Products and Services')
-                                    ->schema([
-                                        Select::make('stock_item_id')
-                                            ->label('Product / Service')
-                                            ->options(StockItem::query()->pluck('product_name',
-                                                'id'))
-                                            ->searchable()
-                                            ->required()
-                                            ->getSearchResultsUsing(function (
-                                                string $search
-                                            ): array {
-                                                return StockItem::query()
-                                                    ->where('product_name',
-                                                        'like',
-                                                        "%{$search}%")
-                                                    ->orWhere('item_code',
-                                                        'like',
-                                                        "%{$search}%")
-                                                    ->limit(50) // Optional: Limit results to avoid performance issues
-                                                    ->pluck('product_name',
-                                                        'id')
-                                                    ->toArray();
-                                            })
-                                            ->getOptionLabelUsing(function (
-                                                $value
-                                            ): ?string {
-                                                return StockItem::find($value)?->product_name;
-                                            })
-                                            ->live()
-                                            ->afterStateUpdated(function (
-                                                $state,
-                                                Set $set,
-                                                Get $get
-                                            ) {
-                                                if (! $state) {
-                                                    return;
-                                                }
+                                     ->schema([
+                                         Forms\Components\Section::make('POS Sale')
+                                                                 ->schema([
+                                                                     Repeater::make('sale_items')
+                                                                             ->label('Products and Services')
+                                                                             ->schema([
+                                                                                 Select::make('stock_item_id')
+                                                                                       ->label('Product / Service')
+                                                                                       ->options(StockItem::query()->pluck('product_name',
+                                                                                           'id'))
+                                                                                       ->searchable()
+                                                                                       ->required()
+                                                                                       ->getSearchResultsUsing(function (
+                                                                                           string $search
+                                                                                       ): array {
+                                                                                           return StockItem::query()
+                                                                                                           ->where('product_name',
+                                                                                                               'like',
+                                                                                                               "%{$search}%")
+                                                                                                           ->orWhere('item_code',
+                                                                                                               'like',
+                                                                                                               "%{$search}%")
+                                                                                                           ->limit(50) // Optional: Limit results to avoid performance issues
+                                                                                                           ->pluck('product_name',
+                                                                                                   'id')
+                                                                                                           ->toArray();
+                                                                                       })
+                                                                                       ->getOptionLabelUsing(function (
+                                                                                           $value
+                                                                                       ): ?string {
+                                                                                           return StockItem::find($value)?->product_name;
+                                                                                       })
+                                                                                       ->live()
+                                                                                       ->afterStateUpdated(function (
+                                                                                           $state,
+                                                                                           Set $set,
+                                                                                           Get $get
+                                                                                       ) {
+                                                                                           if (! $state) {
+                                                                                               return;
+                                                                                           }
 
-                                                $stockItem = StockItem::find($state);
-                                                if (! $stockItem) {
-                                                    return;
-                                                }
+                                                                                           $stockItem = StockItem::find($state);
+                                                                                           if (! $stockItem) {
+                                                                                               return;
+                                                                                           }
 
-                                                $unitPrice = $stockItem->is_service->value
-                                                    ? $stockItem->total_cost_price_with_gst
-                                                    : $stockItem->selling_price_per_quantity;
+                                                                                           $unitPrice = $stockItem->is_service->value
+                                                                                               ? $stockItem->total_cost_price_with_gst
+                                                                                               : $stockItem->selling_price_per_quantity;
 
-                                                $set('unit_price',
-                                                    $unitPrice);
+                                                                                           $set('unit_price',
+                                                                                               $unitPrice);
 
-                                                if ($stockItem->is_service->value === 1) {
-                                                    $set('quantity', 1);
-                                                }
+                                                                                           if ($stockItem->is_service->value === 1) {
+                                                                                               $set('quantity', 1);
+                                                                                           }
 
-                                                // Calculate total price for this item
-                                                $quantity = $stockItem->is_service->value ? 1 : floatval($get('quantity') ?? 1);
-                                                $total = round($quantity * $unitPrice,
-                                                    2);
-                                                $set('total_price', $total);
+                                                                                           // Calculate total price for this item
+                                                                                           $quantity = $stockItem->is_service->value ? 1 : floatval($get('quantity') ?? 1);
+                                                                                           $total = round($quantity * $unitPrice,
+                                                                                               2);
+                                                                                           $set('total_price', $total);
 
-                                                // Update overall totals using array instead of collection
-                                                $items = $get('../../sale_items') ?? [];
-                                                foreach ($items as &$item) {
-                                                    if ($item['stock_item_id'] === $state) {
-                                                        $item['total_price'] = $total;
-                                                        break;
-                                                    }
-                                                }
+                                                                                           // Update overall totals using array instead of collection
+                                                                                           $items = $get('../../sale_items') ?? [];
+                                                                                           foreach ($items as &$item) {
+                                                                                               if ($item['stock_item_id'] === $state) {
+                                                                                                   $item['total_price'] = $total;
+                                                                                                   break;
+                                                                                               }
+                                                                                           }
 
-                                                $subtotal = array_sum(array_column($items,
-                                                    'total_price'));
-                                                $discountPercentage = floatval($get('../../discount_percentage') ?? 0);
-                                                $discountAmount = round(($subtotal * $discountPercentage) / 100,
-                                                    2);
+                                                                                           $subtotal = array_sum(array_column($items,
+                                                                                               'total_price'));
+                                                                                           $discountPercentage = floatval($get('../../discount_percentage') ?? 0);
+                                                                                           $discountAmount = round(($subtotal * $discountPercentage) / 100,
+                                                                                               2);
 
-                                                $set('../../subtotal_amount',
-                                                    $subtotal);
-                                                $set('../../discount_amount',
-                                                    $discountAmount);
-                                                $set('../../total_amount',
-                                                    $subtotal - $discountAmount);
-                                            }),
+                                                                                           $set('../../subtotal_amount',
+                                                                                               $subtotal);
+                                                                                           $set('../../discount_amount',
+                                                                                               $discountAmount);
+                                                                                           $set('../../total_amount',
+                                                                                               $subtotal - $discountAmount);
+                                                                                       }),
 
-                                        TextInput::make('quantity')
-                                            ->label('Quantity')
-                                            ->numeric()
-                                            ->helperText(function (
-                                                Get $get
-                                            ): string {
-                                                $stockItemId = $get('stock_item_id');
-                                                $stockItem = StockItem::find($stockItemId);
+                                                                                 TextInput::make('quantity')
+                                                                                          ->label('Quantity')
+                                                                                          ->numeric()
+                                                                                          ->helperText(function (
+                                                                                              Get $get
+                                                                                          ): string {
+                                                                                              $stockItemId = $get('stock_item_id');
+                                                                                              $stockItem = StockItem::find($stockItemId);
 
-                                                if ($stockItem && ! $stockItem->is_service->value == 1) {
-                                                    return 'Available: '.$stockItem->quantity;
-                                                }
+                                                                                              if ($stockItem && ! $stockItem->is_service->value == 1) {
+                                                                                                  return 'Available: '.$stockItem->quantity;
+                                                                                              }
 
-                                                return ' ';
-                                            })
-                                            ->minValue(1)
-                                            ->default(1)
-                                            ->required()
-                                            ->live()
-                                            ->disabled(fn (Get $get
-                                            ): bool => StockItem::find($get('stock_item_id'))?->is_service->value == '1'
-                                            )
-                                            ->afterStateUpdated(function (
-                                                $state,
-                                                Set $set,
-                                                Get $get
-                                            ) {
-                                                // Calculate total price for this item
-                                                $unitPrice = floatval($get('unit_price') ?? 0);
-                                                $quantity = floatval($state ?? 1);
-                                                $total = round($quantity * $unitPrice,
-                                                    2);
-                                                $set('total_price',
-                                                    $total);
+                                                                                              return ' ';
+                                                                                          })
+                                                                                          ->minValue(1)
+                                                                                          ->default(1)
+                                                                                          ->required()
+                                                                                          ->live()
+                                                                                          ->disabled(fn(Get $get
+                                                                                          ): bool => StockItem::find($get('stock_item_id'))?->is_service->value == '1'
+                                                                                          )
+                                                                                          ->afterStateUpdated(function (
+                                                                                              $state,
+                                                                                              Set $set,
+                                                                                              Get $get
+                                                                                          ) {
+                                                                                              // Calculate total price for this item
+                                                                                              $unitPrice = floatval($get('unit_price') ?? 0);
+                                                                                              $quantity = floatval($state ?? 1);
+                                                                                              $total = round($quantity * $unitPrice,
+                                                                                                  2);
+                                                                                              $set('total_price',
+                                                                                                  $total);
 
-                                                // Update overall totals
-                                                $items = $get('../../sale_items') ?? [];
-                                                $currentState = $get('stock_item_id');
+                                                                                              // Update overall totals
+                                                                                              $items = $get('../../sale_items') ?? [];
+                                                                                              $currentState = $get('stock_item_id');
 
-                                                foreach ($items as &$item) {
-                                                    if ($item['stock_item_id'] === $currentState) {
-                                                        $item['total_price'] = $total;
-                                                        break;
-                                                    }
-                                                }
+                                                                                              foreach ($items as &$item) {
+                                                                                                  if ($item['stock_item_id'] === $currentState) {
+                                                                                                      $item['total_price'] = $total;
+                                                                                                      break;
+                                                                                                  }
+                                                                                              }
 
-                                                $subtotal = array_sum(array_column($items,
-                                                    'total_price'));
-                                                $discountPercentage = floatval($get('../../discount_percentage') ?? 0);
-                                                $discountAmount = round(($subtotal * $discountPercentage) / 100,
-                                                    2);
+                                                                                              $subtotal = array_sum(array_column($items,
+                                                                                                  'total_price'));
+                                                                                              $discountPercentage = floatval($get('../../discount_percentage') ?? 0);
+                                                                                              $discountAmount = round(($subtotal * $discountPercentage) / 100,
+                                                                                                  2);
 
-                                                $set('../../subtotal_amount',
-                                                    $subtotal);
-                                                $set('../../discount_amount',
-                                                    $discountAmount);
-                                                $set('../../total_amount',
-                                                    $subtotal - $discountAmount);
-                                            }),
+                                                                                              $set('../../subtotal_amount',
+                                                                                                  $subtotal);
+                                                                                              $set('../../discount_amount',
+                                                                                                  $discountAmount);
+                                                                                              $set('../../total_amount',
+                                                                                                  $subtotal - $discountAmount);
+                                                                                          }),
 
-                                        TextInput::make('unit_price')
-                                            ->label('Unit Price')
-                                            ->prefix('MVR')
-                                            ->numeric()
-                                            ->readOnly(),
+                                                                                 TextInput::make('unit_price')
+                                                                                          ->label('Unit Price')
+                                                                                          ->prefix('MVR')
+                                                                                          ->numeric()
+                                                                                          ->readOnly(),
 
-                                        TextInput::make('total_price')
-                                            ->label('Total Price')
-                                            ->prefix('MVR')
-                                            ->numeric()
-                                            ->readOnly(),
-                                    ])
-                                    ->columns(4)
-                                    ->columnSpan(9)
-                                    ->live(onBlur: true)
-                                    ->required()
-                                    ->afterStateUpdated(function (
-                                        Set $set,
-                                        Get $get
-                                    ) {
-                                        self::calculateTotals($set, $get);
-                                    }),
-                            ])->columnSpan(9),
+                                                                                 TextInput::make('total_price')
+                                                                                          ->label('Total Price')
+                                                                                          ->prefix('MVR')
+                                                                                          ->numeric()
+                                                                                          ->readOnly(),
+                                                                             ])
+                                                                             ->columns(4)
+                                                                             ->columnSpan(9)
+                                                                             ->live(onBlur: true)
+                                                                             ->required()
+                                                                             ->afterStateUpdated(function (
+                                                                                 Set $set,
+                                                                                 Get $get
+                                                                             ) {
+                                                                                 self::calculateTotals($set, $get);
+                                                                             }),
+                                                                 ])->columnSpan(9),
 
-                        Forms\Components\Section::make('POS Details')
-                            ->schema([
-                                Forms\Components\DatePicker::make('date')
-                                    ->required()
-                                    ->default(now()),
+                                         Forms\Components\Section::make('POS Details')
+                                                                 ->schema([
+                                                                     Forms\Components\DatePicker::make('date')
+                                                                                                ->required()
+                                                                                                ->default(now()),
 
-                                Forms\Components\Select::make('customer_id')->label('Customer / Owner')
-                                    ->searchable()
-                                    ->relationship('customer')
-                                    ->getSearchResultsUsing(fn (
-                                        string $search
-                                    ): array => Customer::where('name',
-                                        'like',
-                                        "%{$search}%")->orWhere('phone',
-                                            'like',
-                                            "%{$search}%")->limit(50)->pluck('name',
-                                                'id')->toArray())
-                                    ->getOptionLabelUsing(fn (
-                                        $value
-                                    ): ?string => Customer::find($value)?->name)
-                                    ->required()
-                                    ->live()
-                                    ->createOptionForm([
-                                        Forms\Components\TextInput::make('name')->required(),
-                                        Forms\Components\TextInput::make('phone')->required(),
-                                        Forms\Components\TextInput::make('email')->required(),
-                                    ]),
-
-
-                                Select::make('vehicle_id')
-                                    ->label('Vehicle')
-                                    ->relationship('vehicle', 'vehicle_number')
-                                    ->options(function (Get $get) {
-                                        $customerId = $get('customer_id');
-
-                                        if (! $customerId) {
-                                            return [];
-                                        }
-
-                                        return \App\Models\Vehicle::where('customer_id',
-                                            $customerId)
-                                            ->pluck('vehicle_number',
-                                                'id');
-                                    })
-                                    ->live()
-                                    ->createOptionForm([
-                                        Forms\Components\Select::make('vehicle_type')
-                                            ->options([
-                                                'motorcycle' => 'Motorcycle',
-                                                'scooter' => 'Scooter',
-                                                'bicycle_16' => 'Bicycle 16 Inch',
-                                                'bicycle_20' => 'Bicycle 20 Inch',
-                                                'bicycle_24' => 'Bicycle 24 Inch',
-                                                'car' => 'Car',
-                                                'tricycle' => 'Tricycle',
-                                                'island_pickup' => 'Island Pickup',
-                                                'pickup' => 'Pickup',
-                                                'buggy' => 'Buggy',
-                                                'wheel_barrow' => 'Wheel Barrow',
-                                            ])->label('Vehicle Type')->required()->live(),
-
-                                        Forms\Components\Select::make('brand_id')
-                                            ->relationship('brand',
-                                                'name')->required()
-                                            ->createOptionForm([
-                                                TextInput::make('name')->label('Name')->live(onBlur: true)
-                                                    ->afterStateUpdated(fn (
-                                                        Set $set,
-                                                        ?string $state
-                                                    ) => $set('slug',
-                                                        Str::slug($state))),
-                                                TextInput::make('slug')->label('Slug')->unique('brands',
-                                                    'slug',
-                                                    ignoreRecord: true)->required()->maxLength(255)->readOnly(),
-                                            ]),
-
-                                        Forms\Components\TextInput::make('year_of_manufacture')
-                                            ->label('Year of Manufacture')
-                                            ->placeholder('2019')
-                                            ->hidden(fn (
-                                                callable $get
-                                            ): bool => in_array($get('vehicle_type'),
-                                                [
-                                                    'bicycle_16',
-                                                    'bicycle_20',
-                                                    'bicycle_24',
-                                                    'tricycle',
-                                                    'wheel_barrow',
-                                                ])),
-                                        Forms\Components\TextInput::make('engine_number')
-                                            ->placeholder('Example: PJ12345U123456P')
-                                            ->hidden(fn (
-                                                callable $get
-                                            ): bool => in_array($get('vehicle_type'),
-                                                [
-                                                    'bicycle_16',
-                                                    'bicycle_20',
-                                                    'bicycle_24',
-                                                    'tricycle',
-                                                    'wheel_barrow',
-                                                ])),
-                                        Forms\Components\TextInput::make('chassis_number')
-                                            ->placeholder('Example: 1HGCM82633A123456')
-                                            ->hidden(fn (
-                                                callable $get
-                                            ): bool => in_array($get('vehicle_type'),
-                                                [
-                                                    'bicycle_16',
-                                                    'bicycle_20',
-                                                    'bicycle_24',
-                                                    'tricycle',
-                                                    'wheel_barrow',
-                                                ])),
-                                        Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930')->required()->label('Plate Number / Vehicle Tag'),
-
-                                        Forms\Components\Select::make('customer_id')->label('Customer / Owner')
-                                            ->searchable()->required()
-                                            ->getSearchResultsUsing(fn (
-                                                string $search
-                                            ): array => Customer::where('name',
-                                                'like',
-                                                "%{$search}%")->orWhere('phone',
-                                                    'like',
-                                                    "%{$search}%")->limit(50)->pluck('name',
-                                                        'id')->toArray())
-                                            ->getOptionLabelUsing(fn (
-                                                $value
-                                            ): ?string => Customer::find($value)?->name),
-                                    ]),
+                                                                     Forms\Components\Select::make('customer_id')->label('Customer / Owner')
+                                                                                            ->searchable()
+                                                                                            ->relationship('customer')
+                                                                                            ->getSearchResultsUsing(fn(
+                                                                                                string $search
+                                                                                            ): array => Customer::where('name',
+                                                                                                'like',
+                                                                                                "%{$search}%")->orWhere('phone',
+                                                                                                'like',
+                                                                                                "%{$search}%")->limit(50)->pluck('name',
+                                                                                                'id')->toArray())
+                                                                                            ->getOptionLabelUsing(fn(
+                                                                                                $value
+                                                                                            ): ?string => Customer::find($value)?->name)
+                                                                                            ->required()
+                                                                                            ->live()
+                                                                                            ->createOptionForm([
+                                                                                                Forms\Components\TextInput::make('name')->required(),
+                                                                                                Forms\Components\TextInput::make('phone')->required(),
+                                                                                                Forms\Components\TextInput::make('email')->required(),
+                                                                                            ]),
 
 
-                                // end of a vehicle_id component
-                                Forms\Components\Select::make('transaction_type')->label('Transaction Type')
-                                    ->options(TransactionType::class)
-                                    ->default(TransactionType::PENDING)
-                                    ->required()
-                                    ->reactive(),
+                                                                     Select::make('vehicle_id')
+                                                                           ->label('Vehicle')
+                                                                           ->relationship('vehicle', 'vehicle_number')
+                                                                           ->options(function (Get $get) {
+                                                                               $customerId = $get('customer_id');
 
-                                TextInput::make('subtotal_amount')
-                                    ->label('Subtotal')
-                                    ->prefix('MVR')
-                                    ->disabled()
-                                    ->dehydrated()
-                                    ->live(),
+                                                                               if (! $customerId) {
+                                                                                   return [];
+                                                                               }
 
-                                TextInput::make('discount_percentage')
-                                    ->label('Discount %')
-                                    ->suffix('%')
-                                    ->default(0)
-                                    ->live()
-                                    ->afterStateUpdated(function (
-                                        $state,
-                                        Set $set,
-                                        Get $get
-                                    ) {
-                                        self::calculateTotals($set,
-                                            $get);
-                                    }),
+                                                                               return \App\Models\Vehicle::where('customer_id',
+                                                                                   $customerId)
+                                                                                                         ->pluck('vehicle_number',
+                                                                                                             'id');
+                                                                           })
+                                                                           ->live()
+                                                                           ->createOptionForm([
+                                                                               Forms\Components\Select::make('vehicle_type')
+                                                                                                      ->options([
+                                                                                                          'motorcycle'    => 'Motorcycle',
+                                                                                                          'scooter'       => 'Scooter',
+                                                                                                          'bicycle_16'    => 'Bicycle 16 Inch',
+                                                                                                          'bicycle_20'    => 'Bicycle 20 Inch',
+                                                                                                          'bicycle_24'    => 'Bicycle 24 Inch',
+                                                                                                          'car'           => 'Car',
+                                                                                                          'tricycle'      => 'Tricycle',
+                                                                                                          'island_pickup' => 'Island Pickup',
+                                                                                                          'pickup'        => 'Pickup',
+                                                                                                          'buggy'         => 'Buggy',
+                                                                                                          'wheel_barrow'  => 'Wheel Barrow',
+                                                                                                      ])->label('Vehicle Type')->required()->live(),
 
-                                TextInput::make('discount_amount')
-                                    ->label('Discount Amount')
-                                    ->prefix('MVR')
-                                    ->disabled()
-                                    ->dehydrated(),
+                                                                               Forms\Components\Select::make('brand_id')
+                                                                                                      ->relationship('brand',
+                                                                                                          'name')->required()
+                                                                                                      ->createOptionForm([
+                                                                                                          TextInput::make('name')->label('Name')->live(onBlur: true)
+                                                                                                                   ->afterStateUpdated(fn(
+                                                                                                                       Set $set,
+                                                                                                                       ?string $state
+                                                                                                                   ) => $set('slug',
+                                                                                                                       Str::slug($state))),
+                                                                                                          TextInput::make('slug')->label('Slug')->unique('brands',
+                                                                                                              'slug',
+                                                                                                              ignoreRecord: true)->required()->maxLength(255)->readOnly(),
+                                                                                                      ]),
 
-                                TextInput::make('total_amount')
-                                    ->label('Total Amount')
-                                    ->prefix('MVR')
-                                    ->disabled()
-                                    ->dehydrated(),
+                                                                               Forms\Components\TextInput::make('year_of_manufacture')
+                                                                                                         ->label('Year of Manufacture')
+                                                                                                         ->placeholder('2019')
+                                                                                                         ->hidden(fn(
+                                                                                                             callable $get
+                                                                                                         ): bool => in_array($get('vehicle_type'),
+                                                                                                             [
+                                                                                                                 'bicycle_16',
+                                                                                                                 'bicycle_20',
+                                                                                                                 'bicycle_24',
+                                                                                                                 'tricycle',
+                                                                                                                 'wheel_barrow',
+                                                                                                             ])),
+                                                                               Forms\Components\TextInput::make('engine_number')
+                                                                                                         ->placeholder('Example: PJ12345U123456P')
+                                                                                                         ->hidden(fn(
+                                                                                                             callable $get
+                                                                                                         ): bool => in_array($get('vehicle_type'),
+                                                                                                             [
+                                                                                                                 'bicycle_16',
+                                                                                                                 'bicycle_20',
+                                                                                                                 'bicycle_24',
+                                                                                                                 'tricycle',
+                                                                                                                 'wheel_barrow',
+                                                                                                             ])),
+                                                                               Forms\Components\TextInput::make('chassis_number')
+                                                                                                         ->placeholder('Example: 1HGCM82633A123456')
+                                                                                                         ->hidden(fn(
+                                                                                                             callable $get
+                                                                                                         ): bool => in_array($get('vehicle_type'),
+                                                                                                             [
+                                                                                                                 'bicycle_16',
+                                                                                                                 'bicycle_20',
+                                                                                                                 'bicycle_24',
+                                                                                                                 'tricycle',
+                                                                                                                 'wheel_barrow',
+                                                                                                             ])),
+                                                                               Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930')->required()->label('Plate Number / Vehicle Tag'),
 
-                                Forms\Components\Textarea::make('remarks')
-                                    ->label('Remarks'),
+                                                                               Forms\Components\Select::make('customer_id')->label('Customer / Owner')
+                                                                                                      ->searchable()->required()
+                                                                                                      ->getSearchResultsUsing(fn(
+                                                                                                          string $search
+                                                                                                      ): array => Customer::where('name',
+                                                                                                          'like',
+                                                                                                          "%{$search}%")->orWhere('phone',
+                                                                                                          'like',
+                                                                                                          "%{$search}%")->limit(50)->pluck('name',
+                                                                                                          'id')->toArray())
+                                                                                                      ->getOptionLabelUsing(fn(
+                                                                                                          $value
+                                                                                                      ): ?string => Customer::find($value)?->name),
+                                                                           ]),
 
-                            ])->columnSpan(3),
-                    ]),
+
+                                                                     // end of a vehicle_id component
+                                                                     Forms\Components\Select::make('transaction_type')->label('Transaction Type')
+                                                                                            ->options(TransactionType::class)
+                                                                                            ->default(TransactionType::PENDING)
+                                                                                            ->required()
+                                                                                            ->reactive(),
+
+                                                                     TextInput::make('subtotal_amount')
+                                                                              ->label('Subtotal')
+                                                                              ->prefix('MVR')
+                                                                              ->disabled()
+                                                                              ->dehydrated()
+                                                                              ->live(),
+
+                                                                     TextInput::make('discount_percentage')
+                                                                              ->label('Discount %')
+                                                                              ->suffix('%')
+                                                                              ->default(0)
+                                                                              ->live()
+                                                                              ->afterStateUpdated(function (
+                                                                                  $state,
+                                                                                  Set $set,
+                                                                                  Get $get
+                                                                              ) {
+                                                                                  self::calculateTotals($set,
+                                                                                      $get);
+                                                                              }),
+
+                                                                     TextInput::make('discount_amount')
+                                                                              ->label('Discount Amount')
+                                                                              ->prefix('MVR')
+                                                                              ->disabled()
+                                                                              ->dehydrated(),
+
+                                                                     TextInput::make('total_amount')
+                                                                              ->label('Total Amount')
+                                                                              ->prefix('MVR')
+                                                                              ->disabled()
+                                                                              ->dehydrated(),
+
+                                                                     Forms\Components\Textarea::make('remarks')
+                                                                                              ->label('Remarks'),
+
+                                                                 ])->columnSpan(3),
+                                     ]),
             ]);
     }
 
@@ -523,10 +529,10 @@ class PosResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPos::route('/'),
+            'index'  => Pages\ListPos::route('/'),
             'create' => Pages\CreatePos::route('/create'),
-            'edit' => Pages\EditPos::route('/{record}/edit'),
-            'view' => Pages\ViewPos::route('/{record}'),
+            'edit'   => Pages\EditPos::route('/{record}/edit'),
+            'view'   => Pages\ViewPos::route('/{record}'),
         ];
     }
 }
