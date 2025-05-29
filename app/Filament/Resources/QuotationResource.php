@@ -403,23 +403,26 @@ class QuotationResource extends Resource
                             // Reference to the original quotation
                         ];
 
-                        // Create a new sale
-                        // Create the sale with validation
-                        $sale = Pos::create($saleData);
-
-                        // Validate and convert items
+                        // Validate quotation items
                         if ($record->quotationItems->isEmpty()) {
                             throw new Exception('Cannot create sale: Quotation has no items.');
                         }
 
-                        foreach ($record->quotationItems as $item) {
-                            $sale->items()->create([
+                        // Convert quotation items to the format needed for sale_items JSON field
+                        $saleItems = $record->quotationItems->map(function ($item) {
+                            return [
                                 'stock_item_id' => $item->stock_item_id,
                                 'quantity' => $item->quantity,
                                 'unit_price' => $item->unit_price,
                                 'total_price' => $item->total_price,
-                            ]);
-                        }
+                            ];
+                        })->toArray();
+
+                        // Add sale_items to the data array
+                        $saleData['sale_items'] = $saleItems;
+
+                        // Create the POS record with all data including sale_items
+                        $sale = Pos::create($saleData);
 
                         // Redirect to the edit page of the newly created sale
                         return redirect()->to(PosResource::getUrl('edit', ['record' => $sale]));
@@ -469,7 +472,6 @@ class QuotationResource extends Resource
             'create' => CreateQuotation::route('/create'),
             'edit' => EditQuotation::route('/{record}/edit'),
             'view' => ViewQuotation::route('/{record}'),
-
         ];
     }
 }

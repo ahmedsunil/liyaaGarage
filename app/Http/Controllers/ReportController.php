@@ -6,7 +6,7 @@ use Log;
 use Exception;
 use ZipArchive;
 use Carbon\Carbon;
-use App\Models\Sale;
+use App\Models\Pos;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -31,12 +31,12 @@ class ReportController extends Controller
                 'transaction_types' => $validated['transaction_types'] ?? 'all',
             ]);
 
-            // Generate report name in the format SalesReport(Date)
+            // Generate report name in the format POSReport(Date)
             $fromDate = Carbon::parse($validated['from_date'])->format('Y-m-d');
-            $reportName = "SalesReport({$fromDate})";
+            $reportName = "POSReport({$fromDate})";
 
-            // Get sales data for the specified date range
-            $query = Sale::with(['items.stockItem', 'customer', 'vehicle'])
+            // Get POS data for the specified date range
+            $query = Pos::with(['customer', 'vehicle'])
                 ->whereBetween('date', [$validated['from_date'], $validated['to_date']]);
 
             // Filter by transaction types if provided
@@ -44,26 +44,26 @@ class ReportController extends Controller
                 $query->whereIn('transaction_type', $validated['transaction_types']);
             }
 
-            $sales = $query->get();
+            $posRecords = $query->get();
 
             // Log the query for debugging
-            Log::info('Sales query for report generation', [
+            Log::info('POS query for report generation', [
                 'query' => $query->toSql(),
                 'bindings' => $query->getBindings(),
                 'transaction_types' => $validated['transaction_types'] ?? 'all',
-                'sales_count' => $sales->count(),
+                'pos_records_count' => $posRecords->count(),
             ]);
 
             // Calculate totals
-            $totalAmount = $sales->sum('total_amount');
+            $totalAmount = $posRecords->sum('total_amount');
 
             // Calculate totals by transaction type
-            $totalCash = $sales->where('transaction_type', TransactionType::CASH)->sum('total_amount');
-            $totalTransfer = $sales->where('transaction_type', TransactionType::TRANSFER)->sum('total_amount');
-            $totalPending = $sales->where('transaction_type', TransactionType::PENDING)->sum('total_amount');
+            $totalCash = $posRecords->where('transaction_type', TransactionType::CASH)->sum('total_amount');
+            $totalTransfer = $posRecords->where('transaction_type', TransactionType::TRANSFER)->sum('total_amount');
+            $totalPending = $posRecords->where('transaction_type', TransactionType::PENDING)->sum('total_amount');
 
             Log::info('Generating PDF with data', [
-                'sales_count' => $sales->count(),
+                'pos_records_count' => $posRecords->count(),
                 'totalAmount' => $totalAmount,
                 'totalCash' => $totalCash,
                 'totalTransfer' => $totalTransfer,
@@ -73,7 +73,7 @@ class ReportController extends Controller
             try {
                 // Generate PDF with explicit options
                 $pdf = PDF::loadView('pdf.report', [
-                    'sales' => $sales,
+                    'sales' => $posRecords, // Keep 'sales' as the view variable name
                     'totalAmount' => $totalAmount,
                     'totalCash' => $totalCash,
                     'totalTransfer' => $totalTransfer,
@@ -187,7 +187,7 @@ class ReportController extends Controller
                         'to_date' => $report->to_date,
                     ]);
 
-                    $query = Sale::with(['items.stockItem', 'customer', 'vehicle'])
+                    $query = Pos::with(['customer', 'vehicle'])
                         ->whereBetween('date', [$report->from_date, $report->to_date]);
 
                     // Filter by transaction types if provided
@@ -195,27 +195,27 @@ class ReportController extends Controller
                         $query->whereIn('transaction_type', $report->transaction_types);
                     }
 
-                    $sales = $query->get();
+                    $posRecords = $query->get();
 
                     // Log the query for debugging
-                    Log::info('Sales query for batch download', [
+                    Log::info('POS query for batch download', [
                         'query' => $query->toSql(),
                         'bindings' => $query->getBindings(),
                         'transaction_types' => $report->transaction_types ?? 'all',
-                        'sales_count' => $sales->count(),
+                        'pos_records_count' => $posRecords->count(),
                     ]);
 
                     // Calculate totals
-                    $totalAmount = $sales->sum('total_amount');
+                    $totalAmount = $posRecords->sum('total_amount');
 
                     // Calculate totals by transaction type
-                    $totalCash = $sales->where('transaction_type', TransactionType::CASH)->sum('total_amount');
-                    $totalTransfer = $sales->where('transaction_type', TransactionType::TRANSFER)->sum('total_amount');
-                    $totalPending = $sales->where('transaction_type', TransactionType::PENDING)->sum('total_amount');
+                    $totalCash = $posRecords->where('transaction_type', TransactionType::CASH)->sum('total_amount');
+                    $totalTransfer = $posRecords->where('transaction_type', TransactionType::TRANSFER)->sum('total_amount');
+                    $totalPending = $posRecords->where('transaction_type', TransactionType::PENDING)->sum('total_amount');
 
                     Log::info('Generating PDF with data for batch download', [
                         'report_id' => $report->id,
-                        'sales_count' => $sales->count(),
+                        'pos_records_count' => $posRecords->count(),
                         'totalAmount' => $totalAmount,
                         'totalCash' => $totalCash,
                         'totalTransfer' => $totalTransfer,
@@ -225,7 +225,7 @@ class ReportController extends Controller
                     try {
                         // Generate PDF with explicit options
                         $pdf = PDF::loadView('pdf.report', [
-                            'sales' => $sales,
+                            'sales' => $posRecords, // Keep 'sales' as the view variable name
                             'totalAmount' => $totalAmount,
                             'totalCash' => $totalCash,
                             'totalTransfer' => $totalTransfer,
@@ -318,7 +318,7 @@ class ReportController extends Controller
                     'to_date' => $report->to_date,
                 ]);
 
-                $query = Sale::with(['items.stockItem', 'customer', 'vehicle'])
+                $query = Pos::with(['customer', 'vehicle'])
                     ->whereBetween('date', [$report->from_date, $report->to_date]);
 
                 // Filter by transaction types if provided
@@ -326,26 +326,26 @@ class ReportController extends Controller
                     $query->whereIn('transaction_type', $report->transaction_types);
                 }
 
-                $sales = $query->get();
+                $posRecords = $query->get();
 
-                // Log the query and sales data for debugging
-                Log::info('Sales query for download', [
+                // Log the query and POS data for debugging
+                Log::info('POS query for download', [
                     'query' => $query->toSql(),
                     'bindings' => $query->getBindings(),
                     'transaction_types' => $report->transaction_types ?? 'all',
-                    'sales_count' => $sales->count(),
+                    'pos_records_count' => $posRecords->count(),
                 ]);
 
                 // Calculate totals
-                $totalAmount = $sales->sum('total_amount');
+                $totalAmount = $posRecords->sum('total_amount');
 
                 // Calculate totals by transaction type
-                $totalCash = $sales->where('transaction_type', TransactionType::CASH)->sum('total_amount');
-                $totalTransfer = $sales->where('transaction_type', TransactionType::TRANSFER)->sum('total_amount');
-                $totalPending = $sales->where('transaction_type', TransactionType::PENDING)->sum('total_amount');
+                $totalCash = $posRecords->where('transaction_type', TransactionType::CASH)->sum('total_amount');
+                $totalTransfer = $posRecords->where('transaction_type', TransactionType::TRANSFER)->sum('total_amount');
+                $totalPending = $posRecords->where('transaction_type', TransactionType::PENDING)->sum('total_amount');
 
                 Log::info('Generating PDF with data', [
-                    'sales_count' => $sales->count(),
+                    'pos_records_count' => $posRecords->count(),
                     'totalAmount' => $totalAmount,
                     'totalCash' => $totalCash,
                     'totalTransfer' => $totalTransfer,
@@ -355,7 +355,7 @@ class ReportController extends Controller
                 try {
                     // Generate PDF with explicit options
                     $pdf = PDF::loadView('pdf.report', [
-                        'sales' => $sales,
+                        'sales' => $posRecords, // Keep 'sales' as the view variable name
                         'totalAmount' => $totalAmount,
                         'totalCash' => $totalCash,
                         'totalTransfer' => $totalTransfer,
