@@ -32,6 +32,8 @@ class SaleResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     /**
      * @throws Exception
      */

@@ -21,6 +21,7 @@ use Filament\Forms\Components\Select;
 use App\Support\Enums\TransactionType;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
@@ -254,7 +255,17 @@ class QuotationResource extends Resource
                                     ->label('Vehicle')
                                     ->relationship('vehicle', 'vehicle_number')
                                     ->searchable() // Allows searching through all vehicles
-                                    ->preload() // Loads some options upfront for better performance
+                                    ->options(function (Get $get) {
+                                        $customerId = $get('customer_id');
+
+                                        if (!$customerId) {
+                                            return [];
+                                        }
+
+                                        return \App\Models\Vehicle::where('customer_id', $customerId)
+                                            ->pluck('vehicle_number', 'id');
+                                    })
+                                    ->live()
                                     ->createOptionForm([
                                         Select::make('vehicle_type')
                                             ->options([
@@ -335,6 +346,8 @@ class QuotationResource extends Resource
                                     ->prefix('MVR')
                                     ->disabled()
                                     ->dehydrated(),
+                                Textarea::make('remarks')
+                                    ->label('Remarks'),
                             ])->columnSpan(3),
                     ]),
             ]);

@@ -34,6 +34,7 @@ use App\Policies\ReportPolicy;
 use App\Policies\SaleItemPolicy;
 use App\Policies\QuotationPolicy;
 use App\Policies\StockItemPolicy;
+use App\Policies\PosPolicy;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Gate;
 use App\Policies\QuotationItemPolicy;
@@ -62,6 +63,7 @@ class AppServiceProvider extends ServiceProvider
         QuotationItem::class => QuotationItemPolicy::class,
         Report::class => ReportPolicy::class,
         Business::class => BusinessPolicy::class,
+        Pos::class => PosPolicy::class,
     ];
 
     public function boot(): void

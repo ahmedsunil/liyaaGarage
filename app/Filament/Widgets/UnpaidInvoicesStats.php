@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Sale;
+use App\Models\Pos;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 
@@ -16,11 +16,11 @@ class UnpaidInvoicesStats extends BaseWidget
 
     protected function getStats(): array
     {
-        $totalUnpaid = Sale::where('transaction_type', 'pending')->sum('total_amount');
-        $overdueCount = Sale::where('transaction_type', 'pending')
+        $totalUnpaid = Pos::where('transaction_type', 'pending')->sum('total_amount');
+        $overdueCount = Pos::where('transaction_type', 'pending')
             ->where('created_at', '<', now())
             ->count();
-        $totalSales = Sale::count();
+        $totalSales = Pos::count();
 
 
         return [

@@ -164,6 +164,17 @@ class PermissionsSeeder extends Seeder
                 'delete any report',
                 'force delete any report',
             ],
+            'pos' => [
+                'view pos',
+                'view any pos',
+                'create pos',
+                'edit pos',
+                'edit any pos',
+                'delete pos',
+                'delete any pos',
+                'force delete any pos',
+                'approve any pos',
+            ],
         ];
     }
 }
