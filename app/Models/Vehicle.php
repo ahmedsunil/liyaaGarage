@@ -27,6 +27,11 @@ class Vehicle extends Model
         return $this->hasMany(Sale::class);
     }
 
+    public function pos(): hasMany
+    {
+        return $this->hasMany(Pos::class);
+    }
+
     public function quotations(): hasMany
     {
         return $this->hasMany(Quotation::class);

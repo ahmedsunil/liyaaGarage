@@ -9,7 +9,7 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Filament\Resources\CustomerResource\Pages;
-use App\Filament\Resources\CustomerResource\RelationManagers\SalesRelationManager;
+use App\Filament\Resources\CustomerResource\RelationManagers\PosRelationManager;
 use App\Filament\Resources\CustomerResource\RelationManagers\VehiclesRelationManager;
 
 class CustomerResource extends Resource
@@ -56,7 +56,7 @@ class CustomerResource extends Resource
     public static function getRelations(): array
     {
         return [
-            SalesRelationManager::class,
+            PosRelationManager::class,
             VehiclesRelationManager::class,
         ];
     }

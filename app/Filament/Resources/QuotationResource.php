@@ -7,6 +7,7 @@ use Exception;
 use App\Models\Pos;
 use App\Models\Sale;
 use Filament\Tables;
+use App\Models\Vehicle;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use App\Models\Customer;
@@ -258,27 +259,29 @@ class QuotationResource extends Resource
                                     ->options(function (Get $get) {
                                         $customerId = $get('customer_id');
 
-                                        if (!$customerId) {
+                                        if (! $customerId) {
                                             return [];
                                         }
 
-                                        return \App\Models\Vehicle::where('customer_id', $customerId)
+                                        return Vehicle::where('customer_id', $customerId)
                                             ->pluck('vehicle_number', 'id');
                                     })
                                     ->live()
                                     ->createOptionForm([
                                         Select::make('vehicle_type')
                                             ->options([
-                                                'motocycle' => 'Motocycle',
+                                                'motorcycle' => 'Motorcycle',
                                                 'scooter' => 'Scooter',
-                                                'bicycle' => 'Bicycle',
+                                                'bicycle_16' => 'Bicycle 16 Inch',
+                                                'bicycle_20' => 'Bicycle 20 Inch',
+                                                'bicycle_24' => 'Bicycle 24 Inch',
                                                 'car' => 'Car',
                                                 'tricycle' => 'Tricycle',
                                                 'island_pickup' => 'Island Pickup',
                                                 'pickup' => 'Pickup',
                                                 'buggy' => 'Buggy',
                                                 'wheel_barrow' => 'Wheel Barrow',
-                                            ])->label('Vehicle Type')->required(),
+                                            ])->label('Vehicle Type')->required()->live(),
 
                                         Select::make('brand_id')
                                             ->relationship('brand',
@@ -295,10 +298,29 @@ class QuotationResource extends Resource
                                                     ignoreRecord: true)->required()->maxLength(255)->readOnly(),
                                             ]),
 
-                                        TextInput::make('year_of_manufacture')->label('Year of Manufacture')->placeholder('2019')->required(),
-                                        TextInput::make('engine_number')->placeholder('Example: PJ12345U123456P'),
-                                        TextInput::make('chassis_number')->placeholder('Example: 1HGCM82633A123456'),
-                                        TextInput::make('vehicle_number')->placeholder('Example: P9930')->required(),
+                                        TextInput::make('year_of_manufacture')
+                                            ->label('Year of Manufacture')
+                                            ->placeholder('2019')
+                                            ->hidden(fn (callable $get): bool => in_array($get('vehicle_type'),
+                                                [
+                                                    'bicycle_16', 'bicycle_20', 'bicycle_24', 'tricycle',
+                                                    'wheel_barrow',
+                                                ])),
+                                        TextInput::make('engine_number')
+                                            ->placeholder('Example: PJ12345U123456P')
+                                            ->hidden(fn (callable $get): bool => in_array($get('vehicle_type'),
+                                                [
+                                                    'bicycle_16', 'bicycle_20', 'bicycle_24', 'tricycle',
+                                                    'wheel_barrow',
+                                                ])),
+                                        TextInput::make('chassis_number')
+                                            ->placeholder('Example: 1HGCM82633A123456')
+                                            ->hidden(fn (callable $get): bool => in_array($get('vehicle_type'),
+                                                [
+                                                    'bicycle_16', 'bicycle_20', 'bicycle_24', 'tricycle',
+                                                    'wheel_barrow',
+                                                ])),
+                                        TextInput::make('vehicle_number')->placeholder('Example: P9930')->required()->label('Plate Number / Vehicle Tag'),
 
                                         Select::make('customer_id')->label('Customer / Owner')
                                             ->searchable()->required()

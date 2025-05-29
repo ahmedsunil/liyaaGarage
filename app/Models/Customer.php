@@ -26,6 +26,11 @@ class Customer extends Model
         return $this->hasMany(Sale::class);
     }
 
+    public function pos(): HasMany
+    {
+        return $this->hasMany(Pos::class);
+    }
+
     public function quotations(): HasMany
     {
         return $this->hasMany(Quotation::class);

@@ -351,27 +351,31 @@ class PosResource extends Resource
                                     ->options(function (Get $get) {
                                         $customerId = $get('customer_id');
 
-                                        if (!$customerId) {
+                                        if (! $customerId) {
                                             return [];
                                         }
 
-                                        return \App\Models\Vehicle::where('customer_id', $customerId)
-                                            ->pluck('vehicle_number', 'id');
+                                        return \App\Models\Vehicle::where('customer_id',
+                                            $customerId)
+                                            ->pluck('vehicle_number',
+                                                'id');
                                     })
                                     ->live()
                                     ->createOptionForm([
                                         Forms\Components\Select::make('vehicle_type')
                                             ->options([
-                                                'motocycle' => 'Motocycle',
+                                                'motorcycle' => 'Motorcycle',
                                                 'scooter' => 'Scooter',
-                                                'bicycle' => 'Bicycle',
+                                                'bicycle_16' => 'Bicycle 16 Inch',
+                                                'bicycle_20' => 'Bicycle 20 Inch',
+                                                'bicycle_24' => 'Bicycle 24 Inch',
                                                 'car' => 'Car',
                                                 'tricycle' => 'Tricycle',
                                                 'island_pickup' => 'Island Pickup',
                                                 'pickup' => 'Pickup',
                                                 'buggy' => 'Buggy',
                                                 'wheel_barrow' => 'Wheel Barrow',
-                                            ])->label('Vehicle Type')->required(),
+                                            ])->label('Vehicle Type')->required()->live(),
 
                                         Forms\Components\Select::make('brand_id')
                                             ->relationship('brand',
@@ -388,10 +392,44 @@ class PosResource extends Resource
                                                     ignoreRecord: true)->required()->maxLength(255)->readOnly(),
                                             ]),
 
-                                        Forms\Components\TextInput::make('year_of_manufacture')->label('Year of Manufacture')->placeholder('2019')->required(),
-                                        Forms\Components\TextInput::make('engine_number')->placeholder('Example: PJ12345U123456P'),
-                                        Forms\Components\TextInput::make('chassis_number')->placeholder('Example: 1HGCM82633A123456'),
-                                        Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930')->required(),
+                                        Forms\Components\TextInput::make('year_of_manufacture')
+                                            ->label('Year of Manufacture')
+                                            ->placeholder('2019')
+                                            ->hidden(fn (
+                                                callable $get
+                                            ): bool => in_array($get('vehicle_type'),
+                                                [
+                                                    'bicycle_16',
+                                                    'bicycle_20',
+                                                    'bicycle_24',
+                                                    'tricycle',
+                                                    'wheel_barrow',
+                                                ])),
+                                        Forms\Components\TextInput::make('engine_number')
+                                            ->placeholder('Example: PJ12345U123456P')
+                                            ->hidden(fn (
+                                                callable $get
+                                            ): bool => in_array($get('vehicle_type'),
+                                                [
+                                                    'bicycle_16',
+                                                    'bicycle_20',
+                                                    'bicycle_24',
+                                                    'tricycle',
+                                                    'wheel_barrow',
+                                                ])),
+                                        Forms\Components\TextInput::make('chassis_number')
+                                            ->placeholder('Example: 1HGCM82633A123456')
+                                            ->hidden(fn (
+                                                callable $get
+                                            ): bool => in_array($get('vehicle_type'),
+                                                [
+                                                    'bicycle_16',
+                                                    'bicycle_20',
+                                                    'bicycle_24',
+                                                    'tricycle',
+                                                    'wheel_barrow',
+                                                ])),
+                                        Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930')->required()->label('Plate Number / Vehicle Tag'),
 
                                         Forms\Components\Select::make('customer_id')->label('Customer / Owner')
                                             ->searchable()->required()
