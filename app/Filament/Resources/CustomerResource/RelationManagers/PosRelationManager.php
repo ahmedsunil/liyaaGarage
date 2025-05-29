@@ -7,9 +7,9 @@ use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Support\Enums\TransactionType;
+use App\Filament\Resources\PosResource;
 use Filament\Tables\Actions\EditAction;
 use Illuminate\Database\Eloquent\Model;
-use App\Filament\Resources\PosResource;
 use Filament\Resources\RelationManagers\RelationManager;
 
 class PosRelationManager extends RelationManager

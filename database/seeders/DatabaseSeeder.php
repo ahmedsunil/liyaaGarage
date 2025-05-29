@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             CustomerSeeder::class,
             VendorSeeder::class,
             BusinessSeeder::class,
+            SaleToPosMigrationSeeder::class,
         ]);
     }
 }

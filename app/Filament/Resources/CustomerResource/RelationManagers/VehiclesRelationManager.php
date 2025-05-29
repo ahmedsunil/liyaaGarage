@@ -39,7 +39,7 @@ class VehiclesRelationManager extends RelationManager
                     return Str::title($state);
                 }),
                 Tables\Columns\TextColumn::make('vehicle_number'),
-                Tables\Columns\TextColumn::make('year_of_manufacture'),
+                //                Tables\Columns\TextColumn::make('year_of_manufacture'),
             ])
             ->filters([
                 //
