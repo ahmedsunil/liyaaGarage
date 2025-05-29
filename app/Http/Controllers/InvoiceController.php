@@ -39,7 +39,13 @@ class InvoiceController extends Controller
         // Convert the JSON sale_items to a collection similar to the Sale->items relationship
         $saleItemsCollection = collect($pos->sale_items)->map(function ($item) {
             // Create an object with properties similar to SaleItem
-            $itemObject = (object) $item;
+            $itemObject = new \stdClass();
+
+            // Explicitly set all required properties
+            $itemObject->stock_item_id = $item['stock_item_id'] ?? null;
+            $itemObject->quantity = $item['quantity'] ?? 0;
+            $itemObject->unit_price = $item['unit_price'] ?? 0;
+            $itemObject->total_price = $item['total_price'] ?? 0;
 
             // Add a stockItem property that mimics the SaleItem->stockItem relationship
             $itemObject->stockItem = \App\Models\StockItem::find($item['stock_item_id']);
