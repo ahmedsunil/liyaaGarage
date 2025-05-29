@@ -108,7 +108,7 @@ class SaleItem extends Model
                         } else {
                             // Improved error message with more details
                             throw ValidationException::withMessages([
-                                'stock' => "Only {$stockItem->quantity} units available for item {$stockItem->name}. Requested: {$salesItem->quantity}",
+                                'stock' => "Only {$stockItem->quantity} units available for product \"{$stockItem->product_name}\". Requested: {$salesItem->quantity}",
                             ]);
                         }
                     }
@@ -125,19 +125,9 @@ class SaleItem extends Model
                             ->persistent()
                             ->send();
 
-                // If this SalesItem is being created as part of a new Sale creation
-                // (rather than being added to an existing Sale), we should prevent the
-                // Sale from being created too.
-                if ($salesItem->sale && $salesItem->sale->exists && DB::transactionLevel() > 0) {
-                    // Roll back the transaction that includes the Sale
-
+                // Prevent the creation of the sale item and its parent sale
+                if (DB::transactionLevel() > 0) {
                     DB::rollBack();
-
-                    // If the Sale was just created and hasn't been committed yet
-                    if ($salesItem->sale->wasRecentlyCreated) {
-                        // Detach it from the database (it won't actually be saved due to rollback)
-                        $salesItem->sale->delete();
-                    }
                 }
 
                 // Re-throw to prevent creation
@@ -186,7 +176,7 @@ class SaleItem extends Model
                                 } else {
                                     // Can't increase at all
                                     throw ValidationException::withMessages([
-                                        'stock' => "Only {$stockItem->quantity} additional units available for item {$stockItem->name}. ".
+                                        'stock' => "Only {$stockItem->quantity} additional units available for product \"{$stockItem->product_name}\". ".
                                             "Maximum possible quantity: {$maxPossibleQty} items (currently {$originalQty}).",
                                     ]);
                                 }

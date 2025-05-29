@@ -27,6 +27,11 @@ class Sale extends Model
     {
         parent::boot();
 
+        static::creating(function ($sale) {
+            // This will be checked after the sale is created but before it's committed
+            // If the sale has no items after creation, it will be considered invalid
+            // The actual validation happens in the SaleItem model
+        });
 
         static::deleting(function ($sale) {
             // Delete each sale item individually to trigger the deleted event
@@ -44,10 +49,10 @@ class Sale extends Model
         return $this->hasMany(SaleItem::class);
     }
 
-    //    public function isInvalid(): bool
-    //    {
-    //        return $this->relationLoaded('items') ? $this->items->isEmpty() : $this->items()->count() === 0;
-    //    }
+    public function isInvalid(): bool
+    {
+        return $this->relationLoaded('items') ? $this->items->isEmpty() : $this->items()->count() === 0;
+    }
 
     public function vehicle(): BelongsTo
     {
