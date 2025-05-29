@@ -26,6 +26,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use App\Filament\Resources\QuotationResource\Pages\EditQuotation;
 use App\Filament\Resources\QuotationResource\Pages\ViewQuotation;
@@ -255,7 +256,6 @@ class QuotationResource extends Resource
                                 Select::make('vehicle_id')
                                     ->label('Vehicle')
                                     ->relationship('vehicle', 'vehicle_number')
-                                    ->searchable() // Allows searching through all vehicles
                                     ->options(function (Get $get) {
                                         $customerId = $get('customer_id');
 
@@ -396,6 +396,7 @@ class QuotationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['vehicle', 'vehicle.customer', 'customer']))
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 Tables\Columns\TextColumn::make('customer.name')

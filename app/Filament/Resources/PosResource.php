@@ -39,6 +39,7 @@ class PosResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['vehicle', 'vehicle.customer', 'customer']))
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 TextColumn::make('customer_name')
@@ -347,7 +348,6 @@ class PosResource extends Resource
                                 Select::make('vehicle_id')
                                     ->label('Vehicle')
                                     ->relationship('vehicle', 'vehicle_number')
-                                    ->searchable() // Allows searching through all vehicles
                                     ->options(function (Get $get) {
                                         $customerId = $get('customer_id');
 
