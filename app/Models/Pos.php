@@ -43,9 +43,10 @@ class Pos extends Model
                             ]);
                         }
 
-                        if ($stockItem->is_service->value == 0 && $stockItem->quantity < $item['quantity']) {
+                        if ($stockItem->is_service->value == 0 && $stockItem->quantity < ($item['quantity'] ?? 1)) {
+                            $requestedQuantity = $item['quantity'] ?? 1;
                             throw ValidationException::withMessages([
-                                'stock' => "Only {$stockItem->quantity} units available for product \"{$stockItem->product_name}\". Requested: {$item['quantity']}",
+                                'stock' => "Only {$stockItem->quantity} units available for product \"{$stockItem->product_name}\". Requested: {$requestedQuantity}",
                             ]);
                         }
                     }
@@ -82,13 +83,14 @@ class Pos extends Model
                             }
 
                             if ($stockItem->is_service->value == 0) {
-                                if ($stockItem->quantity >= $item['quantity']) {
-                                    $stockItem->quantity -= $item['quantity'];
+                                $itemQuantity = $item['quantity'] ?? 1;
+                                if ($stockItem->quantity >= $itemQuantity) {
+                                    $stockItem->quantity -= $itemQuantity;
                                     $stockItem->save();
                                     self::updateStockStatus($stockItem);
                                 } else {
                                     throw ValidationException::withMessages([
-                                        'stock' => "Only {$stockItem->quantity} units available for product \"{$stockItem->product_name}\". Requested: {$item['quantity']}",
+                                        'stock' => "Only {$stockItem->quantity} units available for product \"{$stockItem->product_name}\". Requested: {$itemQuantity}",
                                     ]);
                                 }
                             }
@@ -144,8 +146,8 @@ class Pos extends Model
 
                         if ($stockItem->is_service->value == 0) {
                             $oldItem = $oldItemsMap[$stockItemId] ?? null;
-                            $oldQty = $oldItem ? $oldItem['quantity'] : 0;
-                            $newQty = $item['quantity'];
+                            $oldQty = $oldItem ? $oldItem['quantity'] : 1;
+                            $newQty = $item['quantity'] ?? 1;
                             $qtyDifference = $newQty - $oldQty;
 
                             // Only check if we're increasing quantity
@@ -202,10 +204,12 @@ class Pos extends Model
 
                             if (!$newItem) {
                                 // Item was removed, restore full quantity
-                                $qtyDifference = $oldItem['quantity'];
+                                $qtyDifference = $oldItem['quantity'] ?? 1;
                             } else {
                                 // Item quantity was changed
-                                $qtyDifference = $oldItem['quantity'] - $newItem['quantity'];
+                                $oldQuantity = $oldItem['quantity'] ?? 1;
+                                $newQuantity = $newItem['quantity'] ?? 1;
+                                $qtyDifference = $oldQuantity - $newQuantity;
                             }
 
                             if ($qtyDifference > 0) {
@@ -225,10 +229,12 @@ class Pos extends Model
 
                             if (!$oldItem) {
                                 // New item added
-                                $qtyDifference = $newItem['quantity'];
+                                $qtyDifference = $newItem['quantity'] ?? 1;
                             } else {
                                 // Item quantity was changed
-                                $qtyDifference = $newItem['quantity'] - $oldItem['quantity'];
+                                $newQuantity = $newItem['quantity'] ?? 1;
+                                $oldQuantity = $oldItem['quantity'] ?? 1;
+                                $qtyDifference = $newQuantity - $oldQuantity;
                             }
 
                             if ($qtyDifference > 0) {
@@ -285,7 +291,8 @@ class Pos extends Model
                         $stockItem = StockItem::find($item['stock_item_id']);
 
                         if ($stockItem && $stockItem->is_service->value == 0) {
-                            $stockItem->quantity += $item['quantity'];
+                            $itemQuantity = $item['quantity'] ?? 1;
+                            $stockItem->quantity += $itemQuantity;
                             $stockItem->save();
                             self::updateStockStatus($stockItem);
                         }

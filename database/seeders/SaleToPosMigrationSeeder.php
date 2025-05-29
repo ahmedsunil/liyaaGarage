@@ -41,9 +41,12 @@ class SaleToPosMigrationSeeder extends Seeder
                     // Convert sale items to the format expected by Pos.sale_items
                     $saleItems = [];
                     foreach ($sale->items as $item) {
+                        // Set quantity to 1 for service items
+                        $quantity = $item->stockItem && $item->stockItem->is_service ? 1 : $item->quantity;
+
                         $saleItems[] = [
                             'stock_item_id' => $item->stock_item_id,
-                            'quantity' => $item->quantity,
+                            'quantity' => $quantity,
                             'unit_price' => $item->unit_price,
                             'total_price' => $item->total_price,
                         ];

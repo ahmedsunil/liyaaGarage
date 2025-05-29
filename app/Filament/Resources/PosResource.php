@@ -39,7 +39,6 @@ class PosResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['vehicle', 'vehicle.customer', 'customer']))
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 TextColumn::make('customer_name')
@@ -105,13 +104,31 @@ class PosResource extends Resource
                                 // Convert the JSON sale_items to a collection similar to the Sale->items relationship
                                 $saleItemsCollection = collect($pos->sale_items)->map(function ($item) {
                                     // Create an object with properties similar to SaleItem
-                                    $itemObject = new \stdClass;
+                                    $itemObject = (object) $item;
 
-                                    // Explicitly set all required properties
-                                    $itemObject->stock_item_id = $item['stock_item_id'] ?? null;
-                                    $itemObject->quantity = $item['quantity'] ?? 0;
-                                    $itemObject->unit_price = $item['unit_price'] ?? 0;
-                                    $itemObject->total_price = $item['total_price'] ?? 0;
+                                    // Ensure quantity is explicitly set as a property on the object
+                                    if (isset($item['quantity'])) {
+                                        $itemObject->quantity = $item['quantity'];
+                                    } else {
+                                        // Set a default quantity of 1 if not specified
+                                        $itemObject->quantity = 1;
+                                    }
+
+                                    // Ensure unit_price is explicitly set as a property on the object
+                                    if (isset($item['unit_price'])) {
+                                        $itemObject->unit_price = $item['unit_price'];
+                                    } else {
+                                        // Set a default unit_price of 0 if not specified
+                                        $itemObject->unit_price = 0;
+                                    }
+
+                                    // Ensure total_price is explicitly set as a property on the object
+                                    if (isset($item['total_price'])) {
+                                        $itemObject->total_price = $item['total_price'];
+                                    } else {
+                                        // Calculate total_price from quantity and unit_price if not specified
+                                        $itemObject->total_price = $itemObject->quantity * $itemObject->unit_price;
+                                    }
 
                                     // Add a stockItem property that mimics the SaleItem->stockItem relationship
                                     $itemObject->stockItem = StockItem::find($item['stock_item_id']);
@@ -255,7 +272,6 @@ class PosResource extends Resource
                                             })
                                             ->minValue(1)
                                             ->default(1)
-                                            ->required()
                                             ->live()
                                             ->disabled(fn (Get $get
                                             ): bool => StockItem::find($get('stock_item_id'))?->is_service->value == '1'
@@ -354,6 +370,7 @@ class PosResource extends Resource
                                 Select::make('vehicle_id')
                                     ->label('Vehicle')
                                     ->relationship('vehicle', 'vehicle_number')
+                                    ->searchable() // Allows searching through all vehicles
                                     ->options(function (Get $get) {
                                         $customerId = $get('customer_id');
 
