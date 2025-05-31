@@ -369,20 +369,18 @@ class PosResource extends Resource
 
                                 Select::make('vehicle_id')
                                     ->label('Vehicle')
-                                    ->relationship('vehicle', 'vehicle_number')
-                                    ->searchable() // Allows searching through all vehicles
-                                    ->options(function (Get $get) {
-                                        $customerId = $get('customer_id');
+                                    ->relationship('vehicle', 'vehicle_number',
+                                        function ($query, callable $get) {
+                                            $customerId = $get('customer_id');
 
-                                        if (! $customerId) {
-                                            return [];
-                                        }
+                                            if ($customerId) {
+                                                $query->where('customer_id',
+                                                    $customerId);
+                                            }
 
-                                        return \App\Models\Vehicle::where('customer_id',
-                                            $customerId)
-                                            ->pluck('vehicle_number',
-                                                'id');
-                                    })
+                                            return $query;
+                                        })
+//                                    ->searchable() // Now searches only within customer's vehicles
                                     ->live()
                                     ->createOptionForm([
                                         Forms\Components\Select::make('vehicle_type')
@@ -454,19 +452,12 @@ class PosResource extends Resource
                                                 ])),
                                         Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930')->required()->label('Plate Number / Vehicle Tag'),
 
-                                        Forms\Components\Select::make('customer_id')->label('Customer / Owner')
-                                            ->searchable()->required()
-                                            ->getSearchResultsUsing(fn (
-                                                string $search
-                                            ): array => Customer::where('name',
-                                                'like',
-                                                "%{$search}%")->orWhere('phone',
-                                                    'like',
-                                                    "%{$search}%")->limit(50)->pluck('name',
-                                                        'id')->toArray())
-                                            ->getOptionLabelUsing(fn (
-                                                $value
-                                            ): ?string => Customer::find($value)?->name),
+                                        Forms\Components\Hidden::make('customer_id')
+                                            ->default(function (
+                                                Get $get
+                                            ) {
+                                                return $get('../../customer_id');
+                                            }),
                                     ]),
 
 
