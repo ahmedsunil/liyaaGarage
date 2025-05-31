@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use Str;
-use DB;
 use App\Models\Pos;
 use App\Models\StockItem;
 use Filament\Tables\Table;
@@ -11,9 +10,7 @@ use Illuminate\Database\Query\Builder;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Columns\BadgeColumn;
-use Illuminate\Contracts\Pagination\Paginator;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Contracts\Pagination\CursorPaginator;
 
 class PopularServices extends BaseWidget
 {
@@ -27,10 +24,10 @@ class PopularServices extends BaseWidget
         // Extract all stock_item_ids from the sale_items JSON field
         $stockItemCounts = [];
         foreach ($posRecords as $pos) {
-            if (!empty($pos->sale_items)) {
+            if (! empty($pos->sale_items)) {
                 foreach ($pos->sale_items as $item) {
                     $stockItemId = $item['stock_item_id'];
-                    if (!isset($stockItemCounts[$stockItemId])) {
+                    if (! isset($stockItemCounts[$stockItemId])) {
                         $stockItemCounts[$stockItemId] = 0;
                     }
                     $stockItemCounts[$stockItemId]++;
@@ -61,10 +58,10 @@ class PopularServices extends BaseWidget
                 StockItem::query()
                     ->whereIn('id', array_keys($stockItemCounts))
                     ->selectRaw('id, product_name')
-                    ->orderByRaw('FIELD(id, ' . implode(',', array_keys($stockItemCounts)) . ')')
+                    ->orderByRaw('FIELD(id, '.implode(',', array_keys($stockItemCounts)).')')
                     ->limit(count($stockItemCounts))
             )
-            ->modifyQueryUsing(function ($query) use ($popularProducts) {
+            ->modifyQueryUsing(function ($query) {
                 // This is a hack to make the table work with our custom data
                 // We'll override the data in the columns
                 return $query;
@@ -74,8 +71,8 @@ class PopularServices extends BaseWidget
                     ->label('Product/Service')
                     ->getStateUsing(function ($record, $rowLoop) use ($popularProducts) {
                         return $popularProducts[$rowLoop->iteration - 1]['product_name'] ?? $record->product_name;
-                    })
-                    ->searchable(),
+                    }),
+                //                    ->searchable(),
 
                 BadgeColumn::make('total_sales')
                     ->label('Total Sales')
