@@ -45,7 +45,7 @@ class PopularServices extends BaseWidget
             $productName = $productNameMap[$stockItemId] ?? 'Unknown Product';
             $popularProducts->push([
                 'product_name' => $productName,
-                'total_sales'  => $count,
+                'total_sales' => $count,
             ]);
         }
 
@@ -54,12 +54,12 @@ class PopularServices extends BaseWidget
 
         return $table
             ->query(
-            // Use a query builder that works with the collection
+                // Use a query builder that works with the collection
                 StockItem::query()
-                         ->whereIn('id', array_keys($stockItemCounts))
-                         ->selectRaw('id, product_name')
-                         ->orderByRaw('FIELD(id, '.implode(',', array_keys($stockItemCounts)).')')
-                         ->limit(count($stockItemCounts))
+                    ->whereIn('id', array_keys($stockItemCounts))
+                    ->selectRaw('id, product_name')
+                    ->orderByRaw('FIELD(id, '.implode(',', array_keys($stockItemCounts)).')')
+                    ->limit(count($stockItemCounts))
             )
             ->modifyQueryUsing(function ($query) {
                 // This is a hack to make the table work with our custom data
@@ -68,18 +68,18 @@ class PopularServices extends BaseWidget
             })
             ->columns([
                 TextColumn::make('product_name')
-                          ->label('Product/Service')
-                          ->getStateUsing(function ($record, $rowLoop) use ($popularProducts) {
-                              return $popularProducts[$rowLoop->iteration - 1]['product_name'] ?? $record->product_name;
-                          }),
+                    ->label('Product/Service')
+                    ->getStateUsing(function ($record, $rowLoop) use ($popularProducts) {
+                        return $popularProducts[$rowLoop->iteration - 1]['product_name'] ?? $record->product_name;
+                    }),
                 //                    ->searchable(),
 
                 BadgeColumn::make('total_sales')
-                           ->label('Total Sales')
-                           ->getStateUsing(function ($record, $rowLoop) use ($popularProducts) {
-                               return $popularProducts[$rowLoop->iteration - 1]['total_sales'] ?? 0;
-                           })
-                           ->color('success'),
+                    ->label('Total Sales')
+                    ->getStateUsing(function ($record, $rowLoop) use ($popularProducts) {
+                        return $popularProducts[$rowLoop->iteration - 1]['total_sales'] ?? 0;
+                    })
+                    ->color('success'),
             ])->paginated();
     }
 
