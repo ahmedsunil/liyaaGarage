@@ -8,7 +8,7 @@ use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 
 class UnpaidInvoicesStats extends BaseWidget
 {
-    protected static ?int $sort = -2; // Position at the top
+    protected static ?int $sort = -3; // Position at the top
 
     protected ?string $heading = 'Unpaid Invoices & Total Sales';
 

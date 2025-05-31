@@ -13,11 +13,22 @@ class RevenueChart extends ChartWidget
 
     protected function getData(): array
     {
-        $dailyRevenue = Pos::whereDate('created_at', today())->sum('total_amount');
+        $dailyRevenue = Pos::whereDate('created_at', today())
+            ->where('transaction_type', '!=', 'pending')
+            ->sum('total_amount');
+
         $weeklyRevenue = Pos::whereBetween('created_at',
-            [now()->startOfWeek(), now()->endOfWeek()])->sum('total_amount');
-        $monthlyRevenue = Pos::whereMonth('created_at', now()->month)->sum('total_amount');
-        $yearlyRevenue = Pos::whereYear('created_at', now()->year)->sum('total_amount');
+            [now()->startOfWeek(), now()->endOfWeek()])
+            ->where('transaction_type', '!=', 'pending')
+            ->sum('total_amount');
+
+        $monthlyRevenue = Pos::whereMonth('created_at', now()->month)
+            ->where('transaction_type', '!=', 'pending')
+            ->sum('total_amount');
+
+        $yearlyRevenue = Pos::whereYear('created_at', now()->year)
+            ->where('transaction_type', '!=', 'pending')
+            ->sum('total_amount');
 
         return [
             'datasets' => [
