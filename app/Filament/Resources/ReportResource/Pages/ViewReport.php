@@ -29,6 +29,9 @@ class ViewReport extends ViewRecord
                                     ->label('Report Name')
                                     ->weight(FontWeight::Bold)
                                     ->size(TextEntry\TextEntrySize::Large),
+                                TextEntry::make('transaction_types')
+                                    ->label('Transaction Types')
+                                    ->size(TextEntry\TextEntrySize::Small),
                                 TextEntry::make('created_at')
                                     ->label('Generated On')
                                     ->dateTime('F j, Y, g:i a'),

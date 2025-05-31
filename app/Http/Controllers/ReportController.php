@@ -81,6 +81,7 @@ class ReportController extends Controller
                     'fromDate' => $validated['from_date'],
                     'toDate' => $validated['to_date'],
                     'reportName' => $reportName,
+                    'transactionTypes' => $validated['transaction_types'] ?? [],
                 ]);
 
                 // Set paper size and orientation
@@ -233,6 +234,7 @@ class ReportController extends Controller
                             'fromDate' => $report->from_date,
                             'toDate' => $report->to_date,
                             'reportName' => $report->name,
+                            'transactionTypes' => $report->transaction_types ?? [],
                         ]);
 
                         // Set paper size and orientation
@@ -363,6 +365,7 @@ class ReportController extends Controller
                         'fromDate' => $report->from_date,
                         'toDate' => $report->to_date,
                         'reportName' => $report->name,
+                        'transactionTypes' => $report->transaction_types ?? [],
                     ]);
 
                     // Set paper size and orientation

@@ -17,7 +17,7 @@
         if ($business && $business->logo_path && Storage::disk('public')->exists($business->logo_path)) {
             return base64_encode(Storage::disk('public')->get($business->logo_path));
         }
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         logger()->error("Logo error: ".$e->getMessage());
     }
 
@@ -175,9 +175,15 @@ $logoData = getLogoData($business);
         <div class="info-section">
             <h3>Summary</h3>
             <p><strong>Total Sales:</strong> {{ $sales->count() }}</p>
-            <p><strong>Total Cash:</strong> {{ number_format($totalCash, 2) }}</p>
-            <p><strong>Total Transfer:</strong> {{ number_format($totalTransfer, 2) }}</p>
-            <p><strong>Total Pending:</strong> {{ number_format($totalPending, 2) }}</p>
+            @if(empty($transactionTypes) || in_array('cash', $transactionTypes))
+                <p><strong>Total Cash:</strong> {{ number_format($totalCash, 2) }}</p>
+            @endif
+            @if(empty($transactionTypes) || in_array('transfer', $transactionTypes))
+                <p><strong>Total Transfer:</strong> {{ number_format($totalTransfer, 2) }}</p>
+            @endif
+            @if(empty($transactionTypes) || in_array('pending', $transactionTypes))
+                <p><strong>Total Pending:</strong> {{ number_format($totalPending, 2) }}</p>
+            @endif
             <p><strong>Total Amount:</strong> {{ number_format($totalAmount, 2) }}</p>
         </div>
         <div class="info-section">
