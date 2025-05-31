@@ -6,7 +6,6 @@ use Str;
 use App\Models\Pos;
 use App\Models\StockItem;
 use Filament\Tables\Table;
-use Illuminate\Database\Query\Builder;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Columns\BadgeColumn;
