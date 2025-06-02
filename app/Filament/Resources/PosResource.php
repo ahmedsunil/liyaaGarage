@@ -452,12 +452,14 @@ class PosResource extends Resource
                                                 ])),
                                         Forms\Components\TextInput::make('vehicle_number')->placeholder('Example: P9930')->required()->label('Plate Number / Vehicle Tag'),
 
-                                        Forms\Components\Hidden::make('customer_id')
-                                            ->default(function (
-                                                Get $get
-                                            ) {
+                                        Forms\Components\Select::make('customer_id')
+                                            ->label('Customer / Owner')
+                                            ->relationship('customer', 'name')
+                                            ->searchable()
+                                            ->default(function (Get $get) {
                                                 return $get('../../customer_id');
-                                            }),
+                                            })
+                                            ->required(),
                                     ]),
 
 
